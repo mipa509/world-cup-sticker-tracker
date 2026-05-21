@@ -936,6 +936,73 @@
       font-size: 0.96rem;
     }
 
+    .save-trade-form {
+      display: grid;
+      grid-template-columns: minmax(170px, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .trade-name-input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .saved-trades {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .saved-trade-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .saved-trade-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .saved-trade-title {
+      font-weight: 800;
+    }
+
+    .saved-trade-meta {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .saved-trade-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .saved-trade-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .saved-trade-summary h4 {
+      margin: 0 0 6px;
+      font-size: 0.88rem;
+    }
+
     textarea {
       width: 100%;
       min-height: 156px;
@@ -1097,7 +1164,10 @@
       }
 
       .quick-controls,
-      .manual-trade-lists {
+      .manual-trade-lists,
+      .save-trade-form,
+      .saved-trade-summary,
+      .saved-trade-head {
         grid-template-columns: 1fr;
       }
 
@@ -1242,6 +1312,12 @@
         <div>
           <div id="tradeScore" class="trade-score"></div>
           <div id="tradeResults" class="trade-results"></div>
+          <div class="save-trade-form">
+            <input id="tradeNameInput" class="trade-name-input" type="text" placeholder="Trade name, e.g. Alex / FB group">
+            <button class="button" type="button" data-action="save-trade">Save Trade</button>
+            <button class="button" type="button" data-action="copy-current-trade">Copy Trade</button>
+          </div>
+          <div id="savedTrades" class="saved-trades" aria-label="Saved trades"></div>
         </div>
       </div>
     </section>
@@ -1395,6 +1471,8 @@
       manualSwapsList: document.getElementById("manualSwapsList"),
       tradeScore: document.getElementById("tradeScore"),
       tradeResults: document.getElementById("tradeResults"),
+      tradeNameInput: document.getElementById("tradeNameInput"),
+      savedTrades: document.getElementById("savedTrades"),
       importFile: document.getElementById("importFile"),
       extrasCount: document.getElementById("extrasCount")
     };
@@ -1477,7 +1555,8 @@
     function sanitizeState(input) {
       const clean = {
         stickers: {},
-        extrasCount: DEFAULT_EXTRA_COUNT
+        extrasCount: DEFAULT_EXTRA_COUNT,
+        savedTrades: []
       };
 
       if (input && Number.isFinite(Number(input.extrasCount))) {
@@ -1493,7 +1572,38 @@
         });
       }
 
+      if (input && Array.isArray(input.savedTrades)) {
+        clean.savedTrades = input.savedTrades.map(trade => sanitizeSavedTrade(trade, clean.extrasCount)).filter(Boolean).slice(0, 50);
+      }
+
       return clean;
+    }
+
+    function getAlbumIdsForExtras(extrasCount) {
+      const teamIds = TEAMS.flatMap(team => Array.from({ length: TEAM_STICKER_COUNT }, (_, index) => stickerId(team.code, index + 1)));
+      const extraIds = Array.from({ length: extrasCount }, (_, index) => stickerId("EXT", index + 1));
+      return [...teamIds, ...extraIds];
+    }
+
+    function sortIdsAgainst(ids, orderedIds) {
+      const order = new Map(orderedIds.map((id, index) => [id, index]));
+      return [...ids].sort((a, b) => (order.get(a) ?? 99999) - (order.get(b) ?? 99999));
+    }
+
+    function sanitizeSavedTrade(trade, extrasCount = state.extrasCount) {
+      if (!trade || typeof trade !== "object") return null;
+      const orderedIds = getAlbumIdsForExtras(extrasCount);
+      const known = new Set(orderedIds);
+      const give = Array.isArray(trade.give) ? sortIdsAgainst(trade.give.filter(id => known.has(id)), orderedIds) : [];
+      const receive = Array.isArray(trade.receive) ? sortIdsAgainst(trade.receive.filter(id => known.has(id)), orderedIds) : [];
+      if (!give.length && !receive.length) return null;
+      return {
+        id: String(trade.id || `trade-${Date.now()}-${Math.random().toString(36).slice(2)}`),
+        name: String(trade.name || "Saved trade").slice(0, 80),
+        savedAt: String(trade.savedAt || new Date().toISOString()),
+        give,
+        receive
+      };
     }
 
     function isKnownStickerId(id, extrasCount = state.extrasCount) {
@@ -2237,6 +2347,22 @@
       return { needs, swaps, unknown: parsed.unknown };
     }
 
+    function getCurrentTradeProposal() {
+      const parsed = getTradeInput();
+      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
+      const canGive = sortIds([...parsed.needs].filter(id => myDuplicates.has(id)));
+      const canReceive = sortIds([...parsed.swaps].filter(id => myMissing.has(id)));
+      const balancedCount = Math.min(canGive.length, canReceive.length);
+      return {
+        give: canGive.slice(0, balancedCount),
+        receive: canReceive.slice(0, balancedCount),
+        extraGive: canGive.slice(balancedCount),
+        extraReceive: canReceive.slice(balancedCount),
+        unknown: parsed.unknown
+      };
+    }
+
     function renderTradeBlock(title, ids, className, emptyText) {
       return `
         <div>
@@ -2246,6 +2372,138 @@
           </div>
         </div>
       `;
+    }
+
+    function formatTradeNote(trade) {
+      return [
+        `Trade: ${trade.name}`,
+        `Saved: ${new Date(trade.savedAt).toLocaleString()}`,
+        "",
+        "I give:",
+        formatGroupedStickerText(trade.give),
+        "",
+        "I receive:",
+        formatGroupedStickerText(trade.receive)
+      ].join("\n");
+    }
+
+    async function copyText(text, successMessage) {
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus(successMessage);
+          return;
+        } catch (error) {
+          // Fall back to text download below.
+        }
+      }
+      downloadBlob(new Blob([text], { type: "text/plain;charset=utf-8" }), `world-cup-trade-${getDateStamp()}.txt`);
+      setStatus("Text saved as a file.");
+    }
+
+    function saveCurrentTrade() {
+      const proposal = getCurrentTradeProposal();
+      if (!proposal.give.length && !proposal.receive.length) {
+        setStatus("No balanced trade to save yet.");
+        return;
+      }
+      const name = refs.tradeNameInput.value.trim() || `Trade ${state.savedTrades.length + 1}`;
+      const trade = sanitizeSavedTrade({
+        id: `trade-${Date.now()}`,
+        name,
+        savedAt: new Date().toISOString(),
+        give: proposal.give,
+        receive: proposal.receive
+      });
+      if (!trade) return;
+      state.savedTrades.unshift(trade);
+      state.savedTrades = state.savedTrades.slice(0, 50);
+      saveState();
+      refs.tradeNameInput.value = "";
+      renderSavedTrades();
+      setStatus("Trade saved.");
+    }
+
+    function copyCurrentTrade() {
+      const proposal = getCurrentTradeProposal();
+      const name = refs.tradeNameInput.value.trim() || "Current trade";
+      const trade = sanitizeSavedTrade({ id: "current", name, savedAt: new Date().toISOString(), give: proposal.give, receive: proposal.receive });
+      if (!trade) {
+        setStatus("No balanced trade to copy yet.");
+        return;
+      }
+      copyText(formatTradeNote(trade), "Trade copied.");
+    }
+
+    function renderSavedTrades() {
+      if (!state.savedTrades.length) {
+        refs.savedTrades.innerHTML = `<p class="empty-state">No saved trades yet.</p>`;
+        return;
+      }
+      refs.savedTrades.innerHTML = state.savedTrades.map(renderSavedTradeCard).join("");
+    }
+
+    function renderSavedTradeCard(trade) {
+      return `
+        <article class="saved-trade-card">
+          <div class="saved-trade-head">
+            <div>
+              <div class="saved-trade-title">${escapeHtml(trade.name)}</div>
+              <div class="saved-trade-meta">${new Date(trade.savedAt).toLocaleString()} | Give ${trade.give.length} | Receive ${trade.receive.length}</div>
+            </div>
+            <div class="saved-trade-actions">
+              <button class="button" type="button" data-action="copy-saved-trade" data-id="${trade.id}">Copy</button>
+              <button class="button" type="button" data-action="load-saved-trade" data-id="${trade.id}">Load</button>
+              <button class="button" type="button" data-action="delete-saved-trade" data-id="${trade.id}">Delete</button>
+            </div>
+          </div>
+          <div class="saved-trade-summary">
+            <div>
+              <h4>I give</h4>
+              <div class="sticker-list">${trade.give.length ? trade.give.map(id => renderStickerPill(id, "trade")).join("") : `<p class="empty-state">Nothing</p>`}</div>
+            </div>
+            <div>
+              <h4>I receive</h4>
+              <div class="sticker-list">${trade.receive.length ? trade.receive.map(id => renderStickerPill(id, "receive")).join("") : `<p class="empty-state">Nothing</p>`}</div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+
+    function findSavedTrade(id) {
+      return state.savedTrades.find(trade => trade.id === id) || null;
+    }
+
+    function copySavedTrade(id) {
+      const trade = findSavedTrade(id);
+      if (trade) copyText(formatTradeNote(trade), "Saved trade copied.");
+    }
+
+    function deleteSavedTrade(id) {
+      state.savedTrades = state.savedTrades.filter(trade => trade.id !== id);
+      saveState();
+      renderSavedTrades();
+      setStatus("Saved trade deleted.");
+    }
+
+    function loadSavedTrade(id) {
+      const trade = findSavedTrade(id);
+      if (!trade) return;
+      manualTrade.needs.clear();
+      manualTrade.swaps.clear();
+      trade.give.forEach(id => manualTrade.needs.add(id));
+      trade.receive.forEach(id => manualTrade.swaps.add(id));
+      refs.tradeInput.value = "";
+      refs.tradeNameInput.value = trade.name;
+      renderTradeQuick();
+      renderTrade();
+      renderSavedTrades();
+      setStatus("Saved trade loaded into matcher.");
     }
 
     function parseTradeText(text) {
@@ -2385,7 +2643,8 @@
         version: 1,
         exportedAt: new Date().toISOString(),
         extrasCount: state.extrasCount,
-        stickers: state.stickers
+        stickers: state.stickers,
+        savedTrades: state.savedTrades
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -2427,6 +2686,7 @@
       const next = Math.min(200, Math.max(0, Math.round(Number(refs.extrasCount.value) || 0)));
       state.extrasCount = next;
       pruneTradeDraft();
+      state.savedTrades = state.savedTrades.map(sanitizeSavedTrade).filter(Boolean);
       saveState();
       render();
       setStatus(`Extras set to ${next}.`);
@@ -2474,6 +2734,7 @@
       }
       renderTradeQuick();
       renderTrade();
+      renderSavedTrades();
     }
 
     function clearManualTrade() {
@@ -2481,6 +2742,7 @@
       manualTrade.swaps.clear();
       renderTradeQuick();
       renderTrade();
+      renderSavedTrades();
       setStatus("Trade picks cleared.");
     }
 
@@ -2490,6 +2752,7 @@
       manualTrade.swaps.clear();
       renderTradeQuick();
       renderTrade();
+      renderSavedTrades();
       setStatus("Trade entry cleared.");
     }
 
@@ -2521,6 +2784,11 @@
       if (action === "reset") resetData();
       if (action === "save-matrix") saveMatrixPng();
       if (action === "save-swaps") saveSwapList();
+      if (action === "save-trade") saveCurrentTrade();
+      if (action === "copy-current-trade") copyCurrentTrade();
+      if (action === "copy-saved-trade") copySavedTrade(target.dataset.id);
+      if (action === "load-saved-trade") loadSavedTrade(target.dataset.id);
+      if (action === "delete-saved-trade") deleteSavedTrade(target.dataset.id);
       if (action === "match") renderTrade();
       if (action === "sample") loadSampleTrade();
       if (action === "clear-trade") clearTradeAll();
@@ -2549,6 +2817,7 @@
       renderLists();
       renderTradeQuick();
       renderTrade();
+      renderSavedTrades();
     }
 
     document.addEventListener("click", handleAction);

@@ -20,6 +20,7 @@ That means:
 - A friend can use the same public link and have their own data on their own phone.
 - If someone clears Safari/browser data, their saved collection may be removed.
 - To back up or move phones, use `Export` to save a JSON file, then `Import` it later.
+- JSON backups include your album state and any saved trade proposals.
 
 ## Suggested sharing text
 Track your World Cup 2026 sticker album, swaps, needs, and trade matches here:
@@ -38,4 +39,4 @@ You can fork this repository or copy the files into your own GitHub repository a
 2. Push `index.html`, `README.md`, and `.gitignore`.
 3. In GitHub: Settings > Pages > Build and deployment > Deploy from a branch > `main` / root.
 
-The app stores sticker data in the browser using `localStorage`. Use Export/Import JSON to move data between devices until cloud sync is added.
+The app stores sticker data and saved trade proposals in the browser using `localStorage`. Use Export/Import JSON to move data between devices until cloud sync is added.
