@@ -2,6 +2,13 @@
 
 Standalone mobile-first sticker tracker for the 2026 World Cup album.
 
+## Live app
+Open the app here:
+
+https://mipa509.github.io/world-cup-sticker-tracker/
+
+On iPhone, open the link in Safari and use Share > Add to Home Screen for the best app-like experience.
+
 ## Use locally
 Open `index.html` in a browser, or serve the folder with any static file server.
 
