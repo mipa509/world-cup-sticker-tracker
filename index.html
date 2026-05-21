@@ -496,6 +496,13 @@
       font-weight: 700;
     }
 
+    .matrix-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
     .legend-swatch {
       display: inline-flex;
       align-items: center;
@@ -1160,6 +1167,10 @@
         <span class="legend-swatch duplicate">swap</span>
         <span>#1 outlined logo sticker</span>
         <span>#13 hatched team photo</span>
+      </div>
+      <div class="matrix-tools">
+        <button class="button" type="button" data-action="save-matrix">Save Matrix PNG</button>
+        <button class="button" type="button" data-action="save-swaps">Save Swap List</button>
       </div>
       <div id="overviewMatrix" class="matrix-wrap" aria-label="Album grid overview"></div>
     </section>
@@ -1903,6 +1914,292 @@
       return [...ids].sort((a, b) => (order.get(a) ?? 99999) - (order.get(b) ?? 99999));
     }
 
+    function getDateStamp() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.rel = "noopener";
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 800);
+    }
+
+    async function shareOrDownloadBlob(blob, filename, title) {
+      try {
+        const file = new File([blob], filename, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title });
+          setStatus("Share sheet opened.");
+          return;
+        }
+      } catch (error) {
+        // Fall back to normal download below.
+      }
+      downloadBlob(blob, filename);
+      setStatus(`${filename} saved.`);
+    }
+
+    function getSwapIds() {
+      return sortIds(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+    }
+
+    function formatGroupedStickerText(ids) {
+      const groups = groupStickerIds(sortIds(ids));
+      if (!groups.length) return "No swaps available.";
+      return groups.map(group => {
+        const title = group.team ? `${group.title} (${group.key})` : "Extras (EXT)";
+        const numbers = group.ids.map(id => padNumber(getStickerMeta(id).number)).join(", ");
+        return `${title}: ${numbers}`;
+      }).join("\n");
+    }
+
+    function buildSwapListText() {
+      const stats = getStats();
+      return [
+        "World Cup 2026 swaps available",
+        `Updated: ${new Date().toLocaleString()}`,
+        `Complete: ${stats.owned}/${stats.total} (${stats.percent}%)`,
+        "",
+        formatGroupedStickerText(getSwapIds())
+      ].join("\n");
+    }
+
+    function saveSwapList() {
+      const text = buildSwapListText();
+      const filename = `world-cup-swaps-${getDateStamp()}.txt`;
+      downloadBlob(new Blob([text], { type: "text/plain;charset=utf-8" }), filename);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(
+          () => setStatus("Swap list saved and copied."),
+          () => setStatus("Swap list saved.")
+        );
+      } else {
+        setStatus("Swap list saved.");
+      }
+    }
+
+    function getMatrixExportTeams() {
+      if (activeGroup === "EXT") return TEAMS;
+      const teams = getFilteredTeams();
+      return teams.length ? teams : TEAMS;
+    }
+
+    function getMatrixViewLabel(teams) {
+      if (activeGroup === "EXT") return "All teams";
+      if (searchTerm.trim()) return `Search: ${searchTerm.trim()}`;
+      if (activeGroup !== "ALL") return `Group ${activeGroup}`;
+      return teams.length === TEAMS.length ? "All teams" : "Current view";
+    }
+
+    function saveMatrixPng() {
+      const teams = getMatrixExportTeams();
+      const canvas = drawMatrixCanvas(teams);
+      const filename = `world-cup-matrix-${getDateStamp()}.png`;
+      if (canvas.toBlob) {
+        canvas.toBlob(blob => {
+          if (blob) shareOrDownloadBlob(blob, filename, "World Cup sticker matrix");
+        }, "image/png");
+      } else {
+        const dataUrl = canvas.toDataURL("image/png");
+        const anchor = document.createElement("a");
+        anchor.href = dataUrl;
+        anchor.download = filename;
+        anchor.click();
+        setStatus(`${filename} saved.`);
+      }
+    }
+
+    function drawMatrixCanvas(teams) {
+      const cell = 31;
+      const rowHeight = 30;
+      const left = 228;
+      const top = 96;
+      const right = 28;
+      const bottom = 54;
+      const width = left + TEAM_STICKER_COUNT * cell + right;
+      const height = top + teams.length * rowHeight + bottom;
+      const scale = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = "#f3f5ef";
+      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+      roundRect(ctx, 14, 14, width - 28, height - 28, 10);
+      ctx.fill();
+      ctx.strokeStyle = "#d8dfd8";
+      ctx.stroke();
+
+      const allIds = teams.flatMap(getTeamStickerIds);
+      const stats = getStats(allIds);
+      ctx.fillStyle = "#101713";
+      ctx.font = "800 24px Arial, Helvetica, sans-serif";
+      ctx.fillText("World Cup Sticker Tracker", 28, 45);
+      ctx.fillStyle = "#5a665f";
+      ctx.font = "700 13px Arial, Helvetica, sans-serif";
+      ctx.fillText(`${getMatrixViewLabel(teams)} | Owned ${stats.owned}/${stats.total} | Need ${stats.missing} | Swap ${stats.duplicates}`, 28, 68);
+
+      ctx.fillStyle = "#f8faf7";
+      ctx.fillRect(left, top - rowHeight, TEAM_STICKER_COUNT * cell, rowHeight);
+      ctx.font = "800 11px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let number = 1; number <= TEAM_STICKER_COUNT; number += 1) {
+        const x = left + (number - 1) * cell;
+        ctx.fillStyle = "#5a665f";
+        ctx.fillText(String(number), x + cell / 2, top - rowHeight / 2);
+      }
+
+      teams.forEach((team, rowIndex) => {
+        const y = top + rowIndex * rowHeight;
+        ctx.fillStyle = rowIndex % 2 ? "#fbfcfa" : "#ffffff";
+        ctx.fillRect(24, y, width - 48, rowHeight);
+        drawFlagMark(ctx, team, 32, y + 6, 28, 18);
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#101713";
+        ctx.font = "800 11px Arial, Helvetica, sans-serif";
+        drawTruncatedText(ctx, team.name, 68, y + rowHeight / 2, 112);
+        ctx.fillStyle = "#5a665f";
+        ctx.font = "800 10px Arial, Helvetica, sans-serif";
+        ctx.fillText(team.code, 188, y + rowHeight / 2);
+
+        getTeamStickerIds(team).forEach((id, index) => {
+          drawMatrixExportCell(ctx, id, left + index * cell + 3, y + 4, cell - 6, rowHeight - 8);
+        });
+      });
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillStyle = "#5a665f";
+      ctx.font = "700 11px Arial, Helvetica, sans-serif";
+      ctx.fillText("Green tick = owned | Gold = swap | Blue outline #1 = logo | Hatch #13 = team photo", 28, height - 24);
+      return canvas;
+    }
+
+    function drawMatrixExportCell(ctx, id, x, y, width, height) {
+      const value = getStickerValue(id);
+      const meta = getStickerMeta(id);
+      ctx.fillStyle = value >= 2 ? "#edc468" : value >= 1 ? "#a8dfc3" : "#ffffff";
+      ctx.strokeStyle = "#d8dfd8";
+      ctx.lineWidth = 1;
+      roundRect(ctx, x, y, width, height, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      if (meta.number === 13) drawHatch(ctx, x + 2, y + 2, width - 4, height - 4);
+      if (meta.number === 1) {
+        ctx.strokeStyle = "#2464a2";
+        ctx.lineWidth = 2;
+        roundRect(ctx, x + 2, y + 2, width - 4, height - 4, 3);
+        ctx.stroke();
+      }
+
+      if (value >= 1) {
+        drawCheck(ctx, x + width / 2, y + height / 2, 8, "#087244");
+      } else {
+        ctx.fillStyle = "#5a665f";
+        ctx.font = "800 9px Arial, Helvetica, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(meta.number), x + width / 2, y + height / 2);
+      }
+
+      if (value >= 2) {
+        ctx.fillStyle = "#b07b18";
+        ctx.beginPath();
+        ctx.arc(x + width - 5, y + height - 5, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawHatch(ctx, x, y, width, height) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x, y, width, height);
+      ctx.clip();
+      ctx.strokeStyle = "rgba(36, 100, 162, 0.22)";
+      ctx.lineWidth = 1;
+      for (let offset = -height; offset < width; offset += 7) {
+        ctx.beginPath();
+        ctx.moveTo(x + offset, y + height);
+        ctx.lineTo(x + offset + height, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawCheck(ctx, x, y, size, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.85, y - size * 0.05);
+      ctx.lineTo(x - size * 0.25, y + size * 0.58);
+      ctx.lineTo(x + size * 0.9, y - size * 0.66);
+      ctx.stroke();
+    }
+
+    function countryEmoji(flagCode) {
+      const code = String(flagCode || "").toUpperCase();
+      if (!/^[A-Z]{2}$/.test(code)) return "";
+      return [...code].map(char => String.fromCodePoint(127397 + char.charCodeAt(0))).join("");
+    }
+
+    function drawFlagMark(ctx, team, x, y, width, height) {
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#d8dfd8";
+      roundRect(ctx, x, y, width, height, 3);
+      ctx.fill();
+      ctx.stroke();
+      const emoji = countryEmoji(team.flagCode);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      if (emoji) {
+        ctx.font = "16px 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif";
+        ctx.fillText(emoji, x + width / 2, y + height / 2 + 0.5);
+      } else {
+        ctx.fillStyle = "#2464a2";
+        ctx.font = "800 8px Arial, Helvetica, sans-serif";
+        ctx.fillText(team.code, x + width / 2, y + height / 2 + 0.5);
+      }
+    }
+
+    function drawTruncatedText(ctx, text, x, y, maxWidth) {
+      if (ctx.measureText(text).width <= maxWidth) {
+        ctx.fillText(text, x, y);
+        return;
+      }
+      let trimmed = text;
+      while (trimmed.length > 1 && ctx.measureText(`${trimmed}...`).width > maxWidth) {
+        trimmed = trimmed.slice(0, -1);
+      }
+      ctx.fillText(`${trimmed}...`, x, y);
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
     function renderTrade() {
       const parsed = getTradeInput();
       const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
@@ -2222,6 +2519,8 @@
       if (action === "export") exportData();
       if (action === "import") refs.importFile.click();
       if (action === "reset") resetData();
+      if (action === "save-matrix") saveMatrixPng();
+      if (action === "save-swaps") saveSwapList();
       if (action === "match") renderTrade();
       if (action === "sample") loadSampleTrade();
       if (action === "clear-trade") clearTradeAll();
