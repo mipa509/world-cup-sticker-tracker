@@ -1,0 +1,2274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>World Cup Sticker Tracker</title>
+  <style>
+    :root {
+      --page: #f3f5ef;
+      --panel: #ffffff;
+      --ink: #101713;
+      --muted: #5a665f;
+      --line: #d8dfd8;
+      --pitch: #0f6b4e;
+      --pitch-dark: #084a36;
+      --mint: #dff1e9;
+      --blue: #2464a2;
+      --blue-soft: #e3eef8;
+      --red: #b94136;
+      --red-soft: #f7e1dd;
+      --gold: #b07b18;
+      --gold-soft: #f6ecd2;
+      --shadow: 0 14px 36px rgba(16, 23, 19, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(15, 107, 78, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(15, 107, 78, 0.06) 1px, transparent 1px),
+        var(--page);
+      background-size: 46px 46px;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app-shell {
+      width: min(1260px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 42px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 18px;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(8, 74, 54, 0.96), rgba(15, 107, 78, 0.94)),
+        var(--pitch-dark);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      min-width: 0;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--pitch-dark);
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.75rem;
+      line-height: 1.05;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.95rem;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .button,
+    .ghost-button,
+    .danger-button {
+      min-height: 40px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 700;
+    }
+
+    .ghost-button {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .danger-button {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(185, 65, 54, 0.84);
+    }
+
+    .button:hover,
+    .ghost-button:hover,
+    .danger-button:hover,
+    .tab-button:hover,
+    .filter-button:hover,
+    .sticker:hover,
+    .matrix-cell:hover {
+      transform: translateY(-1px);
+    }
+
+    .status-line {
+      min-height: 24px;
+      margin: 0 2px 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card,
+    .panel,
+    .team-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 8px 24px rgba(16, 23, 19, 0.05);
+    }
+
+    .stat-card {
+      padding: 14px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .progress-track {
+      height: 8px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7ece6;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--pitch), var(--gold));
+      transition: width 0.18s ease;
+    }
+
+    .group-progress {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .group-chip {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.84);
+    }
+
+    .group-chip strong,
+    .group-chip span {
+      display: block;
+    }
+
+    .group-chip span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .nav-row,
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+      scrollbar-width: thin;
+    }
+
+    .tab-button,
+    .filter-button {
+      min-height: 38px;
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 13px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.86);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .tab-button.active,
+    .filter-button.active {
+      border-color: var(--pitch);
+      color: #fff;
+      background: var(--pitch);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .search-box {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .team-card {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      padding: 14px;
+    }
+
+    .team-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 46px;
+    }
+
+    .flag {
+      display: grid;
+      width: 50px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #fff;
+      overflow: hidden;
+      font-size: 1.55rem;
+    }
+
+    .flag-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .flag-fallback {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      place-items: center;
+      font-size: 1.35rem;
+    }
+
+    .hidden-flag {
+      display: none;
+    }
+
+    .team-title {
+      min-width: 0;
+    }
+
+    .team-name {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: 1.08rem;
+      line-height: 1.15;
+    }
+
+    .team-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .team-count {
+      min-width: 62px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+      text-align: center;
+      color: var(--pitch-dark);
+      background: var(--mint);
+      font-weight: 800;
+    }
+
+    .sticker-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .sticker {
+      position: relative;
+      display: grid;
+      min-width: 0;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      color: var(--muted);
+      background: #f8faf7;
+      font-size: 0.92rem;
+      font-weight: 800;
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .sticker.special-logo::before,
+    .sticker.special-photo::before {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      pointer-events: none;
+      border-radius: 5px;
+    }
+
+    .sticker.special-logo::before {
+      border: 2px solid rgba(36, 100, 162, 0.74);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+    }
+
+    .sticker.special-photo::before {
+      border: 1px solid rgba(16, 23, 19, 0.12);
+      background-image: repeating-linear-gradient(
+        135deg,
+        rgba(36, 100, 162, 0.22) 0,
+        rgba(36, 100, 162, 0.22) 3px,
+        transparent 3px,
+        transparent 7px
+      );
+    }
+
+    .sticker span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .owned-check {
+      position: absolute;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #0f8a55;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .sticker .owned-check {
+      top: 5px;
+      right: 5px;
+      width: 18px;
+      height: 18px;
+      font-size: 0.76rem;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.86);
+    }
+
+    .sticker.owned {
+      border-color: #79a891;
+      color: var(--pitch-dark);
+      background: #c8ead8;
+    }
+
+    .sticker.duplicate {
+      border-color: #d79b2d;
+      color: #5d3a00;
+      background: var(--gold-soft);
+    }
+
+    .sticker.duplicate::after {
+      content: "2+";
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      padding: 1px 4px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--gold);
+      font-size: 0.62rem;
+      line-height: 1.35;
+    }
+
+    .team-summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .matrix-panel {
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .matrix-panel h2 {
+      margin-bottom: 4px;
+    }
+
+    .matrix-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .legend-swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-swatch::before {
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: #f8faf7;
+    }
+
+    .legend-swatch.owned::before {
+      border-color: #79a891;
+      background: var(--mint);
+    }
+
+    .legend-swatch.duplicate::before {
+      border-color: #d79b2d;
+      background: var(--gold-soft);
+    }
+
+    .matrix-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .matrix-empty {
+      padding: 14px;
+    }
+
+    .matrix-grid {
+      display: grid;
+      min-width: 880px;
+      grid-template-columns: 190px repeat(20, 32px);
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .matrix-corner,
+    .matrix-number,
+    .matrix-team,
+    .matrix-cell {
+      min-height: 32px;
+      background: #fff;
+    }
+
+    .matrix-corner,
+    .matrix-number {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .matrix-corner,
+    .matrix-team {
+      position: sticky;
+      left: 0;
+      z-index: 4;
+    }
+
+    .matrix-team {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 7px;
+      align-items: center;
+      min-width: 0;
+      padding: 5px 8px;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .matrix-team .flag {
+      width: 28px;
+      height: 19px;
+      border-radius: 3px;
+    }
+
+    .matrix-team-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .matrix-team-code {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .matrix-cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 0;
+      color: transparent;
+      background: #f8faf7;
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+
+    .matrix-cell.owned {
+      background: #a8dfc3;
+    }
+
+    .matrix-cell.duplicate {
+      background: #edc468;
+    }
+
+    .matrix-cell.special-logo {
+      box-shadow: inset 0 0 0 2px rgba(36, 100, 162, 0.72);
+    }
+
+    .matrix-cell.special-photo {
+      background-image: repeating-linear-gradient(
+        135deg,
+        rgba(36, 100, 162, 0.18) 0,
+        rgba(36, 100, 162, 0.18) 3px,
+        transparent 3px,
+        transparent 7px
+      );
+    }
+
+    .matrix-cell.duplicate::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .matrix-cell .owned-check {
+      position: static;
+      width: 18px;
+      height: 18px;
+      color: #fff;
+      background: #087244;
+      font-size: 0.8rem;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+    }
+
+    .panel {
+      padding: 14px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+      line-height: 1.2;
+    }
+
+    .list-columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .list-block h3,
+    .trade-results h3 {
+      margin: 0 0 8px;
+      font-size: 0.96rem;
+    }
+
+    .sticker-list {
+      min-height: 44px;
+    }
+
+    .grouped-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .list-group {
+      display: grid;
+      grid-template-columns: minmax(180px, 240px) 1fr;
+      gap: 8px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .list-group-header {
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 7px;
+      align-items: center;
+      min-width: 0;
+      font-weight: 800;
+    }
+
+    .list-group-header .flag {
+      width: 28px;
+      height: 19px;
+      border-radius: 3px;
+    }
+
+    .list-group-header .extra-mark {
+      display: inline-grid;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--pitch);
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
+    .list-group-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-group-count {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .list-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-content: flex-start;
+      min-width: 0;
+    }
+
+    .mini-pill {
+      display: inline-grid;
+      min-width: 30px;
+      min-height: 28px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--ink);
+      background: #fff;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .mini-pill.missing {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: #efc0ba;
+    }
+
+    .mini-pill.duplicate,
+    .mini-pill.trade {
+      color: #5d3a00;
+      background: var(--gold-soft);
+      border-color: #e3c174;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: var(--ink);
+      background: #fff;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .pill .flag {
+      width: 22px;
+      height: 15px;
+      border-radius: 3px;
+    }
+
+    .pill .extra-mark {
+      display: inline-grid;
+      width: 18px;
+      height: 18px;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--pitch);
+      font-size: 0.75rem;
+      line-height: 1;
+    }
+
+    .pill.missing {
+      color: var(--red);
+      background: var(--red-soft);
+      border-color: #efc0ba;
+    }
+
+    .pill.duplicate,
+    .pill.trade {
+      color: #5d3a00;
+      background: var(--gold-soft);
+      border-color: #e3c174;
+    }
+
+    .pill.receive {
+      color: var(--blue);
+      background: var(--blue-soft);
+      border-color: #aac8e5;
+    }
+
+    .empty-state {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .trade-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 12px;
+    }
+
+    .trade-entry {
+      display: grid;
+      gap: 12px;
+    }
+
+    .trade-quick {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #f8faf7;
+    }
+
+    .quick-controls {
+      display: grid;
+      grid-template-columns: auto minmax(190px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mode-toggle {
+      display: inline-flex;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .mode-button {
+      min-height: 38px;
+      border: 0;
+      padding: 8px 12px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mode-button.active[data-mode="needs"] {
+      color: #fff;
+      background: var(--red);
+    }
+
+    .mode-button.active[data-mode="swaps"] {
+      color: #fff;
+      background: var(--gold);
+    }
+
+    .team-select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 700;
+    }
+
+    .quick-number-grid {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .quick-number {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .quick-number.selected-need {
+      border-color: #ef9f98;
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .quick-number.selected-swap {
+      border-color: #d79b2d;
+      color: #5d3a00;
+      background: var(--gold-soft);
+    }
+
+    .quick-number.useful-match {
+      box-shadow: inset 0 0 0 2px #0f8a55;
+    }
+
+    .manual-trade-lists {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .manual-trade-lists h3 {
+      margin: 0 0 8px;
+      font-size: 0.96rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 156px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .trade-actions,
+    .data-actions,
+    .extras-config {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .trade-score {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .score-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .score-box strong {
+      display: block;
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .score-box span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .trade-results {
+      display: grid;
+      gap: 12px;
+    }
+
+    .data-panel {
+      margin-top: 14px;
+    }
+
+    .extras-config label {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .extras-config input {
+      width: 96px;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .footer-note {
+      margin: 18px 2px 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1040px) {
+      .team-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .group-progress {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .section-grid,
+      .trade-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell {
+        width: min(100% - 20px, 680px);
+        padding-top: 10px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .brand {
+        align-items: flex-start;
+      }
+
+      h1 {
+        font-size: 1.42rem;
+      }
+
+      .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .group-progress {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-row {
+        padding-bottom: 2px;
+      }
+
+      .team-grid,
+      .list-columns {
+        grid-template-columns: 1fr;
+      }
+
+      .list-group {
+        grid-template-columns: 1fr;
+      }
+
+      .team-card {
+        padding: 12px;
+      }
+
+      .sticker-grid {
+        gap: 6px;
+      }
+
+      .sticker {
+        min-height: 42px;
+      }
+
+      .trade-score {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-controls,
+      .manual-trade-lists {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-number-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">26</div>
+        <div>
+          <h1>World Cup Sticker Tracker</h1>
+          <p>Canada | Mexico | United States 2026</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button" type="button" data-action="export">Export</button>
+        <button class="ghost-button" type="button" data-action="import">Import</button>
+        <button class="danger-button" type="button" data-action="reset">Reset</button>
+        <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+      </div>
+    </header>
+
+    <p id="statusLine" class="status-line" aria-live="polite"></p>
+
+    <section class="stat-grid" aria-label="Album summary">
+      <div class="stat-card">
+        <div class="stat-label">Complete</div>
+        <div id="completeStat" class="stat-value">0%</div>
+        <div class="progress-track"><div id="completeBar" class="progress-fill"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Owned</div>
+        <div id="ownedStat" class="stat-value">0</div>
+        <div class="progress-track"><div id="ownedBar" class="progress-fill"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Need</div>
+        <div id="missingStat" class="stat-value">0</div>
+        <div class="progress-track"><div id="missingBar" class="progress-fill"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Swaps</div>
+        <div id="duplicateStat" class="stat-value">0</div>
+        <div class="progress-track"><div id="duplicateBar" class="progress-fill"></div></div>
+      </div>
+    </section>
+
+    <section id="groupProgress" class="group-progress" aria-label="Group progress"></section>
+
+    <nav id="groupNav" class="nav-row" aria-label="Groups"></nav>
+
+    <section class="toolbar" aria-label="Filters">
+      <input id="searchBox" class="search-box" type="search" placeholder="Search team, group, or code">
+      <div id="filterNav" class="filter-row" aria-label="Sticker filters"></div>
+    </section>
+
+    <section class="panel matrix-panel">
+      <h2>Album Grid</h2>
+      <div class="matrix-legend" aria-label="Grid legend">
+        <span class="legend-swatch">need</span>
+        <span class="legend-swatch owned">owned</span>
+        <span class="legend-swatch duplicate">swap</span>
+        <span>#1 outlined logo sticker</span>
+        <span>#13 hatched team photo</span>
+      </div>
+      <div id="overviewMatrix" class="matrix-wrap" aria-label="Album grid overview"></div>
+    </section>
+
+    <main id="teamGrid" class="team-grid" aria-label="Sticker pages"></main>
+
+    <section class="section-grid">
+      <div class="panel">
+        <h2>My Lists</h2>
+        <div class="list-columns">
+          <div class="list-block">
+            <h3>Need</h3>
+            <div id="missingList" class="sticker-list"></div>
+          </div>
+          <div class="list-block">
+            <h3>Swap</h3>
+            <div id="duplicateList" class="sticker-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Extras</h2>
+        <div class="list-columns">
+          <div class="list-block">
+            <h3>Need</h3>
+            <div id="extrasMissingList" class="sticker-list"></div>
+          </div>
+          <div class="list-block">
+            <h3>Swap</h3>
+            <div id="extrasDuplicateList" class="sticker-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel data-panel">
+      <h2>Trade Matcher</h2>
+      <div class="trade-layout">
+        <div class="trade-entry">
+          <div class="trade-quick">
+            <div class="quick-controls">
+              <div class="mode-toggle" aria-label="Trade entry mode">
+                <button id="tradeNeedMode" class="mode-button active" type="button" data-action="trade-mode" data-mode="needs">They need</button>
+                <button id="tradeSwapMode" class="mode-button" type="button" data-action="trade-mode" data-mode="swaps">They swap</button>
+              </div>
+              <select id="tradeTeamSelect" class="team-select" aria-label="Trade team"></select>
+              <button class="button" type="button" data-action="clear-trade-picks">Clear Picks</button>
+            </div>
+            <div id="tradeQuickGrid" class="quick-number-grid" aria-label="Trade sticker numbers"></div>
+            <div class="manual-trade-lists">
+              <div>
+                <h3>Their Need</h3>
+                <div id="manualNeedsList" class="sticker-list"></div>
+              </div>
+              <div>
+                <h3>Their Swap</h3>
+                <div id="manualSwapsList" class="sticker-list"></div>
+              </div>
+            </div>
+          </div>
+          <textarea id="tradeInput" spellcheck="false" placeholder="Needs&#10;Argentina: 1, 4, 8&#10;BRA 2 9 17&#10;&#10;Swaps&#10;Mexico: 3, 12&#10;ENG-05"></textarea>
+          <div class="trade-actions">
+            <button class="button" type="button" data-action="match">Match Trade</button>
+            <button class="button" type="button" data-action="sample">Sample</button>
+            <button class="button" type="button" data-action="clear-trade">Clear All</button>
+          </div>
+        </div>
+        <div>
+          <div id="tradeScore" class="trade-score"></div>
+          <div id="tradeResults" class="trade-results"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel data-panel">
+      <h2>Data</h2>
+      <div class="extras-config">
+        <label for="extrasCount">Extras count</label>
+        <input id="extrasCount" type="number" min="0" max="200" step="1">
+        <button class="button" type="button" data-action="apply-extras">Apply</button>
+      </div>
+      <div class="data-actions">
+        <button class="button" type="button" data-action="mark-all-missing">Clear visible stickers</button>
+        <button class="button" type="button" data-action="mark-visible-owned">Mark visible owned</button>
+      </div>
+    </section>
+
+    <p class="footer-note">Group seed checked on 21 May 2026 against current FIFA and FourFourTwo listings.</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "wc26-sticker-tracker-v1";
+    const TEAM_STICKER_COUNT = 20;
+    const DEFAULT_EXTRA_COUNT = 40;
+
+    const GROUPS = [
+      { group: "A", teams: [
+        { name: "Mexico", code: "MEX", flagCode: "mx", flag: "🇲🇽", aliases: ["mexico"] },
+        { name: "South Africa", code: "RSA", flagCode: "za", flag: "🇿🇦", aliases: ["south africa", "rsa"] },
+        { name: "South Korea", code: "KOR", flagCode: "kr", flag: "🇰🇷", aliases: ["south korea", "korea republic", "republic of korea", "korea"] },
+        { name: "Czechia", code: "CZE", flagCode: "cz", flag: "🇨🇿", aliases: ["czechia", "czech republic"] }
+      ] },
+      { group: "B", teams: [
+        { name: "Canada", code: "CAN", flagCode: "ca", flag: "🇨🇦", aliases: ["canada"] },
+        { name: "Bosnia and Herzegovina", code: "BIH", flagCode: "ba", flag: "🇧🇦", aliases: ["bosnia and herzegovina", "bosnia", "bosnia-herzegovina"] },
+        { name: "Qatar", code: "QAT", flagCode: "qa", flag: "🇶🇦", aliases: ["qatar"] },
+        { name: "Switzerland", code: "SUI", flagCode: "ch", flag: "🇨🇭", aliases: ["switzerland", "swiss"] }
+      ] },
+      { group: "C", teams: [
+        { name: "Brazil", code: "BRA", flagCode: "br", flag: "🇧🇷", aliases: ["brazil"] },
+        { name: "Morocco", code: "MAR", flagCode: "ma", flag: "🇲🇦", aliases: ["morocco", "maroc"] },
+        { name: "Haiti", code: "HAI", flagCode: "ht", flag: "🇭🇹", aliases: ["haiti"] },
+        { name: "Scotland", code: "SCO", flagCode: "gb-sct", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", aliases: ["scotland"] }
+      ] },
+      { group: "D", teams: [
+        { name: "United States", code: "USA", flagCode: "us", flag: "🇺🇸", aliases: ["united states", "usa", "us", "u s a"] },
+        { name: "Paraguay", code: "PAR", flagCode: "py", flag: "🇵🇾", aliases: ["paraguay"] },
+        { name: "Australia", code: "AUS", flagCode: "au", flag: "🇦🇺", aliases: ["australia"] },
+        { name: "Turkiye", code: "TUR", flagCode: "tr", flag: "🇹🇷", aliases: ["turkiye", "turkey"] }
+      ] },
+      { group: "E", teams: [
+        { name: "Germany", code: "GER", flagCode: "de", flag: "🇩🇪", aliases: ["germany", "deutschland"] },
+        { name: "Curacao", code: "CUW", flagCode: "cw", flag: "🇨🇼", aliases: ["curacao", "curaçao"] },
+        { name: "Ivory Coast", code: "CIV", flagCode: "ci", flag: "🇨🇮", aliases: ["ivory coast", "cote d ivoire", "cote d'ivoire", "cote divoire"] },
+        { name: "Ecuador", code: "ECU", flagCode: "ec", flag: "🇪🇨", aliases: ["ecuador"] }
+      ] },
+      { group: "F", teams: [
+        { name: "Netherlands", code: "NED", flagCode: "nl", flag: "🇳🇱", aliases: ["netherlands", "holland"] },
+        { name: "Japan", code: "JPN", flagCode: "jp", flag: "🇯🇵", aliases: ["japan"] },
+        { name: "Sweden", code: "SWE", flagCode: "se", flag: "🇸🇪", aliases: ["sweden"] },
+        { name: "Tunisia", code: "TUN", flagCode: "tn", flag: "🇹🇳", aliases: ["tunisia"] }
+      ] },
+      { group: "G", teams: [
+        { name: "Belgium", code: "BEL", flagCode: "be", flag: "🇧🇪", aliases: ["belgium"] },
+        { name: "Egypt", code: "EGY", flagCode: "eg", flag: "🇪🇬", aliases: ["egypt"] },
+        { name: "Iran", code: "IRN", flagCode: "ir", flag: "🇮🇷", aliases: ["iran", "iran islamic republic"] },
+        { name: "New Zealand", code: "NZL", flagCode: "nz", flag: "🇳🇿", aliases: ["new zealand", "nz"] }
+      ] },
+      { group: "H", teams: [
+        { name: "Spain", code: "ESP", flagCode: "es", flag: "🇪🇸", aliases: ["spain", "espana"] },
+        { name: "Cape Verde", code: "CPV", flagCode: "cv", flag: "🇨🇻", aliases: ["cape verde", "cabo verde"] },
+        { name: "Saudi Arabia", code: "KSA", flagCode: "sa", flag: "🇸🇦", aliases: ["saudi arabia", "saudi"] },
+        { name: "Uruguay", code: "URU", flagCode: "uy", flag: "🇺🇾", aliases: ["uruguay"] }
+      ] },
+      { group: "I", teams: [
+        { name: "France", code: "FRA", flagCode: "fr", flag: "🇫🇷", aliases: ["france"] },
+        { name: "Senegal", code: "SEN", flagCode: "sn", flag: "🇸🇳", aliases: ["senegal"] },
+        { name: "Iraq", code: "IRQ", flagCode: "iq", flag: "🇮🇶", aliases: ["iraq"] },
+        { name: "Norway", code: "NOR", flagCode: "no", flag: "🇳🇴", aliases: ["norway"] }
+      ] },
+      { group: "J", teams: [
+        { name: "Argentina", code: "ARG", flagCode: "ar", flag: "🇦🇷", aliases: ["argentina"] },
+        { name: "Algeria", code: "ALG", flagCode: "dz", flag: "🇩🇿", aliases: ["algeria"] },
+        { name: "Austria", code: "AUT", flagCode: "at", flag: "🇦🇹", aliases: ["austria"] },
+        { name: "Jordan", code: "JOR", flagCode: "jo", flag: "🇯🇴", aliases: ["jordan"] }
+      ] },
+      { group: "K", teams: [
+        { name: "Portugal", code: "POR", flagCode: "pt", flag: "🇵🇹", aliases: ["portugal"] },
+        { name: "DR Congo", code: "COD", flagCode: "cd", flag: "🇨🇩", aliases: ["dr congo", "congo dr", "democratic republic of congo", "drc", "congo"] },
+        { name: "Uzbekistan", code: "UZB", flagCode: "uz", flag: "🇺🇿", aliases: ["uzbekistan"] },
+        { name: "Colombia", code: "COL", flagCode: "co", flag: "🇨🇴", aliases: ["colombia"] }
+      ] },
+      { group: "L", teams: [
+        { name: "England", code: "ENG", flagCode: "gb-eng", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", aliases: ["england"] },
+        { name: "Croatia", code: "CRO", flagCode: "hr", flag: "🇭🇷", aliases: ["croatia"] },
+        { name: "Ghana", code: "GHA", flagCode: "gh", flag: "🇬🇭", aliases: ["ghana"] },
+        { name: "Panama", code: "PAN", flagCode: "pa", flag: "🇵🇦", aliases: ["panama"] }
+      ] }
+    ];
+
+    const TEAMS = GROUPS.flatMap(group => group.teams.map(team => ({ ...team, group: group.group })));
+    const TEAM_BY_CODE = new Map(TEAMS.map(team => [team.code, team]));
+    const CODE_LOOKUP = new Map(TEAMS.map(team => [team.code.toLowerCase(), team]));
+    const NAME_ALIASES = [];
+
+    TEAMS.forEach(team => {
+      [team.name, ...team.aliases].forEach(alias => {
+        NAME_ALIASES.push({ key: normalizeText(alias), team });
+      });
+    });
+    NAME_ALIASES.sort((a, b) => b.key.length - a.key.length);
+
+    let state = loadState();
+    let activeGroup = "ALL";
+    let activeFilter = "all";
+    let searchTerm = "";
+    let statusTimer = null;
+    let activeTradeMode = "needs";
+    let activeTradeCode = "MEX";
+    const manualTrade = {
+      needs: new Set(),
+      swaps: new Set()
+    };
+
+    const refs = {
+      statusLine: document.getElementById("statusLine"),
+      completeStat: document.getElementById("completeStat"),
+      completeBar: document.getElementById("completeBar"),
+      ownedStat: document.getElementById("ownedStat"),
+      ownedBar: document.getElementById("ownedBar"),
+      missingStat: document.getElementById("missingStat"),
+      missingBar: document.getElementById("missingBar"),
+      duplicateStat: document.getElementById("duplicateStat"),
+      duplicateBar: document.getElementById("duplicateBar"),
+      groupProgress: document.getElementById("groupProgress"),
+      groupNav: document.getElementById("groupNav"),
+      filterNav: document.getElementById("filterNav"),
+      searchBox: document.getElementById("searchBox"),
+      overviewMatrix: document.getElementById("overviewMatrix"),
+      teamGrid: document.getElementById("teamGrid"),
+      missingList: document.getElementById("missingList"),
+      duplicateList: document.getElementById("duplicateList"),
+      extrasMissingList: document.getElementById("extrasMissingList"),
+      extrasDuplicateList: document.getElementById("extrasDuplicateList"),
+      tradeInput: document.getElementById("tradeInput"),
+      tradeNeedMode: document.getElementById("tradeNeedMode"),
+      tradeSwapMode: document.getElementById("tradeSwapMode"),
+      tradeTeamSelect: document.getElementById("tradeTeamSelect"),
+      tradeQuickGrid: document.getElementById("tradeQuickGrid"),
+      manualNeedsList: document.getElementById("manualNeedsList"),
+      manualSwapsList: document.getElementById("manualSwapsList"),
+      tradeScore: document.getElementById("tradeScore"),
+      tradeResults: document.getElementById("tradeResults"),
+      importFile: document.getElementById("importFile"),
+      extrasCount: document.getElementById("extrasCount")
+    };
+
+    function normalizeText(value) {
+      return String(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
+    function padNumber(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function stickerId(code, number) {
+      return `${code}-${padNumber(number)}`;
+    }
+
+    function getTeamStickerIds(team) {
+      return Array.from({ length: TEAM_STICKER_COUNT }, (_, index) => stickerId(team.code, index + 1));
+    }
+
+    function flagUrl(team) {
+      if (!team || !team.flagCode) return "";
+      return team.flagCode.includes("-")
+        ? `https://flagcdn.com/${team.flagCode}.svg`
+        : `https://flagcdn.com/w80/${team.flagCode}.png`;
+    }
+
+    function renderFlag(team, extraClass = "") {
+      if (!team) {
+        return `<span class="flag ${extraClass}" aria-hidden="true"><span class="flag-fallback">*</span></span>`;
+      }
+
+      const fallback = team.flag || team.code;
+      return `
+        <span class="flag ${extraClass}">
+          <img class="flag-img" src="${flagUrl(team)}" alt="${team.name} flag" loading="lazy" onerror="this.classList.add('hidden-flag');this.nextElementSibling.classList.remove('hidden-flag')">
+          <span class="flag-fallback hidden-flag">${fallback}</span>
+        </span>
+      `;
+    }
+
+    function getExtraStickerIds() {
+      return Array.from({ length: state.extrasCount }, (_, index) => stickerId("EXT", index + 1));
+    }
+
+    function getAlbumIds() {
+      return [...TEAMS.flatMap(getTeamStickerIds), ...getExtraStickerIds()];
+    }
+
+    function getVisibleIds() {
+      if (activeGroup === "EXT") {
+        return getExtraStickerIds().filter(id => matchesFilter(id));
+      }
+
+      const visibleTeams = TEAMS.filter(team => {
+        const query = normalizeText(searchTerm);
+        const inGroup = activeGroup === "ALL" || team.group === activeGroup;
+        const inSearch = !query || normalizeText(`${team.name} ${team.code} group ${team.group}`).includes(query);
+        return inGroup && inSearch;
+      });
+
+      return visibleTeams.flatMap(team => getTeamStickerIds(team).filter(id => matchesFilter(id)));
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        return sanitizeState(saved);
+      } catch (error) {
+        return sanitizeState(null);
+      }
+    }
+
+    function sanitizeState(input) {
+      const clean = {
+        stickers: {},
+        extrasCount: DEFAULT_EXTRA_COUNT
+      };
+
+      if (input && Number.isFinite(Number(input.extrasCount))) {
+        clean.extrasCount = Math.min(200, Math.max(0, Math.round(Number(input.extrasCount))));
+      }
+
+      if (input && input.stickers && typeof input.stickers === "object") {
+        Object.entries(input.stickers).forEach(([id, value]) => {
+          const amount = Math.max(0, Math.min(2, Math.round(Number(value) || 0)));
+          if (amount > 0 && isKnownStickerId(id, clean.extrasCount)) {
+            clean.stickers[id] = amount;
+          }
+        });
+      }
+
+      return clean;
+    }
+
+    function isKnownStickerId(id, extrasCount = state.extrasCount) {
+      const match = /^([A-Z]{3})-(\d{2,3})$/.exec(id);
+      if (!match) return false;
+      const code = match[1];
+      const number = Number(match[2]);
+
+      if (code === "EXT") {
+        return number >= 1 && number <= Math.max(200, extrasCount);
+      }
+
+      return TEAM_BY_CODE.has(code) && number >= 1 && number <= TEAM_STICKER_COUNT;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function setStatus(message) {
+      refs.statusLine.textContent = message;
+      window.clearTimeout(statusTimer);
+      statusTimer = window.setTimeout(() => {
+        refs.statusLine.textContent = "";
+      }, 3600);
+    }
+
+    function getStickerValue(id) {
+      return Number(state.stickers[id] || 0);
+    }
+
+    function setStickerValue(id, value) {
+      const cleanValue = Math.max(0, Math.min(2, Math.round(Number(value) || 0)));
+      if (cleanValue === 0) {
+        delete state.stickers[id];
+      } else {
+        state.stickers[id] = cleanValue;
+      }
+      saveState();
+    }
+
+    function cycleSticker(id) {
+      const next = (getStickerValue(id) + 1) % 3;
+      setStickerValue(id, next);
+      render();
+    }
+
+    function matchesFilter(id) {
+      const value = getStickerValue(id);
+      if (activeFilter === "missing") return value === 0;
+      if (activeFilter === "owned") return value >= 1;
+      if (activeFilter === "duplicates") return value >= 2;
+      return true;
+    }
+
+    function getStats(ids = getAlbumIds()) {
+      const total = ids.length;
+      const owned = ids.filter(id => getStickerValue(id) >= 1).length;
+      const duplicates = ids.filter(id => getStickerValue(id) >= 2).length;
+      const missing = total - owned;
+      const percent = total ? Math.round((owned / total) * 100) : 100;
+      return { total, owned, duplicates, missing, percent };
+    }
+
+    function renderStats() {
+      const stats = getStats();
+      refs.completeStat.textContent = `${stats.percent}%`;
+      refs.completeBar.style.width = `${stats.percent}%`;
+      refs.ownedStat.textContent = stats.owned;
+      refs.ownedBar.style.width = `${stats.total ? (stats.owned / stats.total) * 100 : 100}%`;
+      refs.missingStat.textContent = stats.missing;
+      refs.missingBar.style.width = `${stats.total ? (stats.missing / stats.total) * 100 : 0}%`;
+      refs.duplicateStat.textContent = stats.duplicates;
+      refs.duplicateBar.style.width = `${stats.total ? Math.min(100, (stats.duplicates / stats.total) * 100) : 0}%`;
+
+      refs.groupProgress.innerHTML = GROUPS.map(group => {
+        const groupIds = group.teams.flatMap(getTeamStickerIds);
+        const groupStats = getStats(groupIds);
+        return `
+          <button class="group-chip" type="button" data-action="group" data-group="${group.group}">
+            <strong>Group ${group.group}</strong>
+            <span>${groupStats.owned}/${groupStats.total} · ${groupStats.percent}%</span>
+            <div class="progress-track"><div class="progress-fill" style="width: ${groupStats.percent}%"></div></div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderNav() {
+      const groupButtons = [
+        { label: "All Teams", group: "ALL" },
+        ...GROUPS.map(group => ({ label: `Group ${group.group}`, group: group.group })),
+        { label: "Extras", group: "EXT" }
+      ];
+
+      refs.groupNav.innerHTML = groupButtons.map(item => `
+        <button class="tab-button ${item.group === activeGroup ? "active" : ""}" type="button" data-action="group" data-group="${item.group}">
+          ${item.label}
+        </button>
+      `).join("");
+
+      const filters = [
+        { label: "All", filter: "all" },
+        { label: "Need", filter: "missing" },
+        { label: "Owned", filter: "owned" },
+        { label: "Swap", filter: "duplicates" }
+      ];
+
+      refs.filterNav.innerHTML = filters.map(item => `
+        <button class="filter-button ${item.filter === activeFilter ? "active" : ""}" type="button" data-action="filter" data-filter="${item.filter}">
+          ${item.label}
+        </button>
+      `).join("");
+    }
+
+    function getFilteredTeams() {
+      const query = normalizeText(searchTerm);
+      return TEAMS.filter(team => {
+        const inGroup = activeGroup === "ALL" || team.group === activeGroup;
+        const inSearch = !query || normalizeText(`${team.name} ${team.code} group ${team.group}`).includes(query);
+        return inGroup && inSearch;
+      });
+    }
+
+    function renderOverviewMatrix() {
+      if (activeGroup === "EXT") {
+        refs.overviewMatrix.innerHTML = `<p class="empty-state matrix-empty">Extras use the main card below because their count is configurable.</p>`;
+        return;
+      }
+
+      const teams = getFilteredTeams();
+      if (!teams.length) {
+        refs.overviewMatrix.innerHTML = `<p class="empty-state matrix-empty">No teams match the current view.</p>`;
+        return;
+      }
+
+      const header = `
+        <div class="matrix-corner">Team</div>
+        ${Array.from({ length: TEAM_STICKER_COUNT }, (_, index) => `<div class="matrix-number">${index + 1}</div>`).join("")}
+      `;
+      const rows = teams.map(team => `
+        <div class="matrix-team">
+          ${renderFlag(team)}
+          <span class="matrix-team-name">${team.name}</span>
+          <span class="matrix-team-code">${team.code}</span>
+        </div>
+        ${getTeamStickerIds(team).map(renderMatrixCell).join("")}
+      `).join("");
+
+      refs.overviewMatrix.innerHTML = `<div class="matrix-grid">${header}${rows}</div>`;
+    }
+
+    function renderTeams() {
+      if (activeGroup === "EXT") {
+        refs.teamGrid.innerHTML = renderExtraCard();
+        return;
+      }
+
+      const teams = getFilteredTeams().filter(team => {
+        const hasVisibleSticker = getTeamStickerIds(team).some(id => matchesFilter(id));
+        return hasVisibleSticker;
+      });
+
+      refs.teamGrid.innerHTML = teams.length
+        ? teams.map(renderTeamCard).join("")
+        : `<div class="panel"><p class="empty-state">No stickers match the current view.</p></div>`;
+    }
+
+    function renderTeamCard(team) {
+      const ids = getTeamStickerIds(team);
+      const visibleIds = ids.filter(id => matchesFilter(id));
+      const stats = getStats(ids);
+      return `
+        <article class="team-card">
+          <div class="team-header">
+            ${renderFlag(team)}
+            <div class="team-title">
+              <h2 class="team-name">${team.name}</h2>
+              <div class="team-meta">Group ${team.group} · ${team.code}</div>
+            </div>
+            <div class="team-count">${stats.owned}/${stats.total}</div>
+          </div>
+          <div class="sticker-grid">
+            ${visibleIds.map(renderStickerButton).join("")}
+          </div>
+          <div class="team-summary">
+            <div class="progress-track"><div class="progress-fill" style="width: ${stats.percent}%"></div></div>
+            <span>${stats.percent}%</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderExtraCard() {
+      const ids = getExtraStickerIds();
+      const visibleIds = ids.filter(id => matchesFilter(id));
+      const stats = getStats(ids);
+      if (!visibleIds.length) {
+        return `<div class="panel"><p class="empty-state">No extras match the current view.</p></div>`;
+      }
+      return `
+        <article class="team-card">
+          <div class="team-header">
+            <div class="flag" aria-hidden="true">★</div>
+            <div class="team-title">
+              <h2 class="team-name">Extras</h2>
+              <div class="team-meta">Configurable · EXT</div>
+            </div>
+            <div class="team-count">${stats.owned}/${stats.total}</div>
+          </div>
+          <div class="sticker-grid">
+            ${visibleIds.map(renderStickerButton).join("")}
+          </div>
+          <div class="team-summary">
+            <div class="progress-track"><div class="progress-fill" style="width: ${stats.percent}%"></div></div>
+            <span>${stats.percent}%</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderStickerButton(id) {
+      const value = getStickerValue(id);
+      const meta = getStickerMeta(id);
+      const className = ["sticker", getStateClass(id), getSpecialClass(id)].filter(Boolean).join(" ");
+      const label = `${meta.label} ${value >= 2 ? "duplicate" : value === 1 ? "owned" : "missing"}`;
+      return `
+        <button class="${className}" type="button" data-action="sticker" data-id="${id}" aria-label="${label}">
+          <span>${meta.number}</span>
+          ${value >= 1 ? '<span class="owned-check" aria-hidden="true">&#10003;</span>' : ""}
+        </button>
+      `;
+    }
+
+    function renderMatrixCell(id) {
+      const value = getStickerValue(id);
+      const className = ["matrix-cell", getStateClass(id), getSpecialClass(id)].filter(Boolean).join(" ");
+      const meta = getStickerMeta(id);
+      const stateLabel = value >= 2 ? "duplicate" : value === 1 ? "owned" : "missing";
+      return `<button class="${className}" type="button" data-action="sticker" data-id="${id}" title="${meta.label} ${stateLabel}" aria-label="${meta.label} ${stateLabel}">${value >= 1 ? '<span class="owned-check" aria-hidden="true">&#10003;</span>' : meta.number}</button>`;
+    }
+
+    function getStateClass(id) {
+      const value = getStickerValue(id);
+      if (value >= 2) return "duplicate";
+      if (value === 1) return "owned";
+      return "missing";
+    }
+
+    function getSpecialClass(id) {
+      const meta = getStickerMeta(id);
+      if (meta.code === "EXT") return "";
+      const number = meta.number;
+      if (number === 1) return "special-logo";
+      if (number === 13) return "special-photo";
+      return "";
+    }
+
+    function getStickerMeta(id) {
+      const [code, rawNumber] = id.split("-");
+      const number = Number(rawNumber);
+      if (code === "EXT") {
+        return {
+          code,
+          number,
+          label: `EXT-${padNumber(number)}`,
+          groupLabel: "Extras",
+          flag: "*",
+          team: null
+        };
+      }
+      const team = TEAM_BY_CODE.get(code);
+      return {
+        code,
+        number,
+        label: `${code}-${padNumber(number)}`,
+        groupLabel: team ? team.name : code,
+        flag: team ? team.flag : "",
+        flagCode: team ? team.flagCode : "",
+        team
+      };
+    }
+
+    function renderLists() {
+      const teamIds = TEAMS.flatMap(getTeamStickerIds);
+      const extraIds = getExtraStickerIds();
+      renderStickerList(refs.missingList, teamIds.filter(id => getStickerValue(id) === 0), "missing", "No team stickers needed.");
+      renderStickerList(refs.duplicateList, teamIds.filter(id => getStickerValue(id) >= 2), "duplicate", "No team stickers available to swap.");
+      renderStickerList(refs.extrasMissingList, extraIds.filter(id => getStickerValue(id) === 0), "missing", "No extras needed.");
+      renderStickerList(refs.extrasDuplicateList, extraIds.filter(id => getStickerValue(id) >= 2), "duplicate", "No extras available to swap.");
+    }
+
+    function renderStickerList(container, ids, className, emptyText) {
+      const sorted = sortIds(ids);
+      if (!sorted.length) {
+        container.innerHTML = `<p class="empty-state">${emptyText}</p>`;
+        return;
+      }
+      container.innerHTML = `<div class="grouped-list">${groupStickerIds(sorted).map(group => renderStickerGroup(group, className)).join("")}</div>`;
+    }
+
+    function groupStickerIds(ids) {
+      const groups = new Map();
+      ids.forEach(id => {
+        const meta = getStickerMeta(id);
+        const key = meta.code;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            key,
+            title: meta.team ? meta.team.name : "Extras",
+            team: meta.team,
+            ids: []
+          });
+        }
+        groups.get(key).ids.push(id);
+      });
+      return [...groups.values()];
+    }
+
+    function renderStickerGroup(group, className) {
+      const flag = group.team ? renderFlag(group.team) : `<span class="extra-mark" aria-hidden="true">*</span>`;
+      return `
+        <div class="list-group">
+          <div class="list-group-header">
+            ${flag}
+            <span class="list-group-title">${group.title}</span>
+            <span class="list-group-count">${group.ids.length}</span>
+          </div>
+          <div class="list-pills">
+            ${group.ids.map(id => renderNumberPill(id, className)).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNumberPill(id, className) {
+      const meta = getStickerMeta(id);
+      return `<button class="mini-pill ${className}" type="button" data-action="sticker" data-id="${id}" title="${id}">${meta.number}</button>`;
+    }
+
+    function renderStickerPill(id, className) {
+      const meta = getStickerMeta(id);
+      const flag = meta.team ? renderFlag(meta.team) : `<span class="extra-mark" aria-hidden="true">*</span>`;
+      return `<span class="pill ${className}">${flag}<span>${id}</span></span>`;
+    }
+
+    function renderTradeQuick() {
+      if (!TEAM_BY_CODE.has(activeTradeCode) && activeTradeCode !== "EXT") {
+        activeTradeCode = "MEX";
+      }
+
+      refs.tradeNeedMode.classList.toggle("active", activeTradeMode === "needs");
+      refs.tradeSwapMode.classList.toggle("active", activeTradeMode === "swaps");
+      refs.tradeTeamSelect.innerHTML = [
+        ...GROUPS.map(group => `
+          <optgroup label="Group ${group.group}">
+            ${group.teams.map(team => `<option value="${team.code}" ${team.code === activeTradeCode ? "selected" : ""}>${team.name}</option>`).join("")}
+          </optgroup>
+        `),
+        `<option value="EXT" ${activeTradeCode === "EXT" ? "selected" : ""}>Extras</option>`
+      ].join("");
+
+      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
+      refs.tradeQuickGrid.innerHTML = getTradeEntryIds().map(id => {
+        const needSelected = manualTrade.needs.has(id);
+        const swapSelected = manualTrade.swaps.has(id);
+        const useful = activeTradeMode === "needs" ? myDuplicates.has(id) : myMissing.has(id);
+        const className = [
+          "quick-number",
+          needSelected ? "selected-need" : "",
+          swapSelected ? "selected-swap" : "",
+          useful ? "useful-match" : ""
+        ].filter(Boolean).join(" ");
+        return `<button class="${className}" type="button" data-action="trade-toggle" data-id="${id}" title="${id}">${getStickerMeta(id).number}</button>`;
+      }).join("");
+
+      renderManualTradeList(refs.manualNeedsList, manualTrade.needs, "missing", "No needs entered.", "needs");
+      renderManualTradeList(refs.manualSwapsList, manualTrade.swaps, "duplicate", "No swaps entered.", "swaps");
+    }
+
+    function getTradeEntryIds() {
+      if (activeTradeCode === "EXT") return getExtraStickerIds();
+      const team = TEAM_BY_CODE.get(activeTradeCode);
+      return team ? getTeamStickerIds(team) : [];
+    }
+
+    function renderManualTradeList(container, idSet, className, emptyText, mode) {
+      const sorted = sortIds([...idSet]);
+      if (!sorted.length) {
+        container.innerHTML = `<p class="empty-state">${emptyText}</p>`;
+        return;
+      }
+      container.innerHTML = `<div class="grouped-list">${groupStickerIds(sorted).map(group => renderManualTradeGroup(group, className, mode)).join("")}</div>`;
+    }
+
+    function renderManualTradeGroup(group, className, mode) {
+      const flag = group.team ? renderFlag(group.team) : `<span class="extra-mark" aria-hidden="true">*</span>`;
+      return `
+        <div class="list-group">
+          <div class="list-group-header">
+            ${flag}
+            <span class="list-group-title">${group.title}</span>
+            <span class="list-group-count">${group.ids.length}</span>
+          </div>
+          <div class="list-pills">
+            ${group.ids.map(id => {
+              const meta = getStickerMeta(id);
+              return `<button class="mini-pill ${className}" type="button" data-action="trade-remove" data-mode="${mode}" data-id="${id}" title="Remove ${id}">${meta.number}</button>`;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function sortIds(ids) {
+      const order = new Map(getAlbumIds().map((id, index) => [id, index]));
+      return [...ids].sort((a, b) => (order.get(a) ?? 99999) - (order.get(b) ?? 99999));
+    }
+
+    function renderTrade() {
+      const parsed = getTradeInput();
+      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
+
+      const canGive = sortIds([...parsed.needs].filter(id => myDuplicates.has(id)));
+      const canReceive = sortIds([...parsed.swaps].filter(id => myMissing.has(id)));
+      const balancedCount = Math.min(canGive.length, canReceive.length);
+      const giveNow = canGive.slice(0, balancedCount);
+      const receiveNow = canReceive.slice(0, balancedCount);
+      const giveExtra = canGive.slice(balancedCount);
+      const receiveExtra = canReceive.slice(balancedCount);
+
+      refs.tradeScore.innerHTML = `
+        <div class="score-box"><strong>${balancedCount}</strong><span>balanced trade</span></div>
+        <div class="score-box"><strong>${canGive.length}</strong><span>I can give</span></div>
+        <div class="score-box"><strong>${canReceive.length}</strong><span>I can receive</span></div>
+      `;
+
+      refs.tradeResults.innerHTML = `
+        ${renderTradeBlock("Give", giveNow, "trade", "No matched duplicates to give.")}
+        ${renderTradeBlock("Receive", receiveNow, "receive", "No matched missing stickers to receive.")}
+        ${renderTradeBlock("Useful extras I can give", giveExtra, "trade", "No unbalanced give-side matches.")}
+        ${renderTradeBlock("Useful extras I can receive", receiveExtra, "receive", "No unbalanced receive-side matches.")}
+        ${parsed.unknown.length ? `<p class="empty-state">Unparsed lines: ${parsed.unknown.length}</p>` : ""}
+      `;
+    }
+
+    function getTradeInput() {
+      const parsed = parseTradeText(refs.tradeInput.value);
+      const needs = new Set(parsed.needs);
+      const swaps = new Set(parsed.swaps);
+      manualTrade.needs.forEach(id => needs.add(id));
+      manualTrade.swaps.forEach(id => swaps.add(id));
+      return { needs, swaps, unknown: parsed.unknown };
+    }
+
+    function renderTradeBlock(title, ids, className, emptyText) {
+      return `
+        <div>
+          <h3>${title}</h3>
+          <div class="sticker-list">
+            ${ids.length ? ids.map(id => renderStickerPill(id, className)).join("") : `<p class="empty-state">${emptyText}</p>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function parseTradeText(text) {
+      const parsed = {
+        needs: new Set(),
+        swaps: new Set(),
+        unknown: []
+      };
+      let mode = "needs";
+
+      text.split(/\r?\n/).forEach(rawLine => {
+        let line = rawLine.trim();
+        if (!line) return;
+
+        const heading = extractHeading(line);
+        if (heading.section && !heading.rest) {
+          mode = heading.section;
+          return;
+        }
+        if (heading.section) {
+          mode = heading.section;
+          line = heading.rest;
+        }
+
+        const before = parsed[mode].size;
+        parseStickerLine(line).forEach(id => parsed[mode].add(id));
+        if (parsed[mode].size === before) {
+          parsed.unknown.push(rawLine);
+        }
+      });
+
+      return parsed;
+    }
+
+    function extractHeading(line) {
+      const needWords = "(?:my\\s+)?(?:needs?|wanted|wants|missing|looking\\s+for)";
+      const swapWords = "(?:my\\s+)?(?:swaps?|duplicates?|dupes?|spares?|have|haves|for\\s+trade|trade|offering)";
+      const needOnly = new RegExp(`^${needWords}\\s*$`, "i");
+      const swapOnly = new RegExp(`^${swapWords}\\s*$`, "i");
+      const needWithRest = new RegExp(`^${needWords}\\s*[:\\-]\\s*(.+)$`, "i");
+      const swapWithRest = new RegExp(`^${swapWords}\\s*[:\\-]\\s*(.+)$`, "i");
+
+      if (needOnly.test(line)) return { section: "needs", rest: "" };
+      if (swapOnly.test(line)) return { section: "swaps", rest: "" };
+
+      const needMatch = line.match(needWithRest);
+      if (needMatch) return { section: "needs", rest: needMatch[1].trim() };
+
+      const swapMatch = line.match(swapWithRest);
+      if (swapMatch) return { section: "swaps", rest: swapMatch[1].trim() };
+
+      return { section: "", rest: line };
+    }
+
+    function parseStickerLine(line) {
+      const ids = new Set();
+      line.split(/[;|]/).forEach(segment => {
+        parseSegment(segment.trim()).forEach(id => ids.add(id));
+      });
+      return ids;
+    }
+
+    function parseSegment(segment) {
+      const ids = new Set();
+      if (!segment) return ids;
+
+      const codeLine = segment.match(/^\s*([A-Za-z]{2,5}|extras?|ext|ex)\b[\s:,-]*(.*)$/i);
+      if (codeLine) {
+        const codeTarget = getCodeTarget(codeLine[1]);
+        const numbers = extractNumbers(codeLine[2] || segment);
+        if (codeTarget && numbers.length) {
+          numbers.forEach(number => addParsedId(ids, codeTarget, number));
+          return ids;
+        }
+      }
+
+      const explicitPattern = /\b([A-Z]{2,5}|EXT|EX)-?0?(\d{1,3})\b/g;
+      let explicitMatch = null;
+      while ((explicitMatch = explicitPattern.exec(segment)) !== null) {
+        const target = getCodeTarget(explicitMatch[1]);
+        if (target) {
+          addParsedId(ids, target, Number(explicitMatch[2]));
+        }
+      }
+      if (ids.size) return ids;
+
+      const extraTarget = findExtraTarget(segment);
+      if (extraTarget) {
+        extractNumbers(segment).forEach(number => addParsedId(ids, extraTarget, number));
+        return ids;
+      }
+
+      const team = findTeamInText(segment);
+      if (team) {
+        extractNumbers(segment).forEach(number => addParsedId(ids, team, number));
+      }
+
+      return ids;
+    }
+
+    function getCodeTarget(rawCode) {
+      const code = normalizeText(rawCode).replace(/\s+/g, "");
+      if (["extra", "extras", "ext", "ex"].includes(code)) return { code: "EXT", type: "extra" };
+      return CODE_LOOKUP.get(code) || null;
+    }
+
+    function findExtraTarget(segment) {
+      const normalized = normalizeText(segment);
+      return /\b(extra|extras|ext)\b/.test(normalized) ? { code: "EXT", type: "extra" } : null;
+    }
+
+    function findTeamInText(segment) {
+      const normalized = ` ${normalizeText(segment)} `;
+      return NAME_ALIASES.find(alias => normalized.includes(` ${alias.key} `))?.team || null;
+    }
+
+    function extractNumbers(text) {
+      return (String(text).match(/\b\d{1,3}\b/g) || []).map(Number);
+    }
+
+    function addParsedId(ids, target, number) {
+      if (target.code === "EXT" || target.type === "extra") {
+        if (number >= 1 && number <= state.extrasCount) {
+          ids.add(stickerId("EXT", number));
+        }
+        return;
+      }
+
+      if (number >= 1 && number <= TEAM_STICKER_COUNT) {
+        ids.add(stickerId(target.code, number));
+      }
+    }
+
+    function exportData() {
+      const payload = {
+        app: "world-cup-sticker-tracker",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        extrasCount: state.extrasCount,
+        stickers: state.stickers
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `world-cup-stickers-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 500);
+      setStatus("Export ready.");
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(String(reader.result || "{}"));
+          state = sanitizeState(imported);
+          saveState();
+          render();
+          setStatus("Import complete.");
+        } catch (error) {
+          setStatus("Import failed. Use a tracker JSON export.");
+        } finally {
+          refs.importFile.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetData() {
+      if (!window.confirm("Reset the whole sticker tracker?")) return;
+      state = sanitizeState(null);
+      saveState();
+      render();
+      setStatus("Tracker reset.");
+    }
+
+    function applyExtrasCount() {
+      const next = Math.min(200, Math.max(0, Math.round(Number(refs.extrasCount.value) || 0)));
+      state.extrasCount = next;
+      pruneTradeDraft();
+      saveState();
+      render();
+      setStatus(`Extras set to ${next}.`);
+    }
+
+    function setVisibleStickers(value) {
+      getVisibleIds().forEach(id => setStickerValue(id, value));
+      render();
+      setStatus(value ? "Visible stickers updated." : "Visible stickers cleared.");
+    }
+
+    function loadSampleTrade() {
+      refs.tradeInput.value = [
+        "Needs",
+        "Argentina: 1, 4, 8",
+        "Brazil: 2, 9, 17",
+        "Mexico: 3, 12",
+        "Extras: 2, 5",
+        "",
+        "Swaps",
+        "ENG 5 6 7",
+        "USA: 1, 8",
+        "DR Congo: 2, 14",
+        "EXT-01 EXT-04"
+      ].join("\n");
+      renderTrade();
+      setStatus("Sample trade loaded.");
+    }
+
+    function toggleManualTrade(id) {
+      if (activeTradeMode === "needs") {
+        if (manualTrade.needs.has(id)) {
+          manualTrade.needs.delete(id);
+        } else {
+          manualTrade.needs.add(id);
+          manualTrade.swaps.delete(id);
+        }
+      } else {
+        if (manualTrade.swaps.has(id)) {
+          manualTrade.swaps.delete(id);
+        } else {
+          manualTrade.swaps.add(id);
+          manualTrade.needs.delete(id);
+        }
+      }
+      renderTradeQuick();
+      renderTrade();
+    }
+
+    function clearManualTrade() {
+      manualTrade.needs.clear();
+      manualTrade.swaps.clear();
+      renderTradeQuick();
+      renderTrade();
+      setStatus("Trade picks cleared.");
+    }
+
+    function clearTradeAll() {
+      refs.tradeInput.value = "";
+      manualTrade.needs.clear();
+      manualTrade.swaps.clear();
+      renderTradeQuick();
+      renderTrade();
+      setStatus("Trade entry cleared.");
+    }
+
+    function pruneTradeDraft() {
+      const known = new Set(getAlbumIds());
+      ["needs", "swaps"].forEach(mode => {
+        [...manualTrade[mode]].forEach(id => {
+          if (!known.has(id)) manualTrade[mode].delete(id);
+        });
+      });
+    }
+
+    function handleAction(event) {
+      const target = event.target.closest("[data-action]");
+      if (!target) return;
+
+      const action = target.dataset.action;
+      if (action === "sticker") cycleSticker(target.dataset.id);
+      if (action === "group") {
+        activeGroup = target.dataset.group;
+        render();
+      }
+      if (action === "filter") {
+        activeFilter = target.dataset.filter;
+        render();
+      }
+      if (action === "export") exportData();
+      if (action === "import") refs.importFile.click();
+      if (action === "reset") resetData();
+      if (action === "match") renderTrade();
+      if (action === "sample") loadSampleTrade();
+      if (action === "clear-trade") clearTradeAll();
+      if (action === "clear-trade-picks") clearManualTrade();
+      if (action === "trade-mode") {
+        activeTradeMode = target.dataset.mode;
+        renderTradeQuick();
+      }
+      if (action === "trade-toggle") toggleManualTrade(target.dataset.id);
+      if (action === "trade-remove") {
+        manualTrade[target.dataset.mode].delete(target.dataset.id);
+        renderTradeQuick();
+        renderTrade();
+      }
+      if (action === "apply-extras") applyExtrasCount();
+      if (action === "mark-all-missing") setVisibleStickers(0);
+      if (action === "mark-visible-owned") setVisibleStickers(1);
+    }
+
+    function render() {
+      refs.extrasCount.value = state.extrasCount;
+      renderStats();
+      renderNav();
+      renderOverviewMatrix();
+      renderTeams();
+      renderLists();
+      renderTradeQuick();
+      renderTrade();
+    }
+
+    document.addEventListener("click", handleAction);
+    refs.searchBox.addEventListener("input", event => {
+      searchTerm = event.target.value;
+      renderOverviewMatrix();
+      renderTeams();
+    });
+    refs.tradeInput.addEventListener("input", renderTrade);
+    refs.tradeTeamSelect.addEventListener("change", event => {
+      activeTradeCode = event.target.value;
+      renderTradeQuick();
+    });
+    refs.importFile.addEventListener("change", event => {
+      const file = event.target.files && event.target.files[0];
+      if (file) importData(file);
+    });
+
+    render();
+  </script>
+</body>
+</html>
