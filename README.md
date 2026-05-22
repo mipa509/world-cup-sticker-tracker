@@ -9,6 +9,21 @@ https://mipa509.github.io/world-cup-sticker-tracker/
 
 On iPhone, open the link in Safari and use Share > Add to Home Screen for the best app-like experience.
 
+## What it does
+- Track owned, needed, and swap stickers for all 48 World Cup 2026 teams.
+- Use the matrix grid for a quick album overview.
+- Export the matrix as a PNG for sharing in chats or Facebook groups.
+- Export/copy your current swap list.
+- Match trades by entering another person's needs and swaps.
+- Save proposed trades so agreed swaps are reserved automatically.
+
+## Trade workflow
+Use `They need` and `They swap` in the Trade Matcher, choose a team, and tap sticker numbers. The app shows what you can give and receive.
+
+When you click `Save Trade`, the stickers you are giving are reserved. Reserved stickers no longer appear in your available swap list or future trade matches, so the next person only sees what is still available. Deleting a saved trade releases those swaps again.
+
+Saved trades can be copied, loaded back into the matcher, deleted, and included in JSON backups.
+
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
 

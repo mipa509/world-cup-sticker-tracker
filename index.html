@@ -1437,6 +1437,7 @@
     let statusTimer = null;
     let activeTradeMode = "needs";
     let activeTradeCode = "MEX";
+    let activeSavedTradeId = "";
     const manualTrade = {
       needs: new Set(),
       swaps: new Set()
@@ -1659,10 +1660,27 @@
       return true;
     }
 
-    function getStats(ids = getAlbumIds()) {
+    function getReservedSwapIds(exceptTradeId = "") {
+      const reserved = new Set();
+      state.savedTrades.forEach(trade => {
+        if (trade.id === exceptTradeId) return;
+        trade.give.forEach(id => reserved.add(id));
+      });
+      return reserved;
+    }
+
+    function isSwapAvailable(id, exceptTradeId = "") {
+      return getStickerValue(id) >= 2 && !getReservedSwapIds(exceptTradeId).has(id);
+    }
+
+    function getAvailableSwapIds(ids = getAlbumIds(), exceptTradeId = "") {
+      return sortIds(ids.filter(id => isSwapAvailable(id, exceptTradeId)));
+    }
+
+    function getStats(ids = getAlbumIds(), exceptTradeId = "") {
       const total = ids.length;
       const owned = ids.filter(id => getStickerValue(id) >= 1).length;
-      const duplicates = ids.filter(id => getStickerValue(id) >= 2).length;
+      const duplicates = ids.filter(id => isSwapAvailable(id, exceptTradeId)).length;
       const missing = total - owned;
       const percent = total ? Math.round((owned / total) * 100) : 100;
       return { total, owned, duplicates, missing, percent };
@@ -1891,9 +1909,9 @@
       const teamIds = TEAMS.flatMap(getTeamStickerIds);
       const extraIds = getExtraStickerIds();
       renderStickerList(refs.missingList, teamIds.filter(id => getStickerValue(id) === 0), "missing", "No team stickers needed.");
-      renderStickerList(refs.duplicateList, teamIds.filter(id => getStickerValue(id) >= 2), "duplicate", "No team stickers available to swap.");
+      renderStickerList(refs.duplicateList, getAvailableSwapIds(teamIds), "duplicate", "No team stickers available to swap.");
       renderStickerList(refs.extrasMissingList, extraIds.filter(id => getStickerValue(id) === 0), "missing", "No extras needed.");
-      renderStickerList(refs.extrasDuplicateList, extraIds.filter(id => getStickerValue(id) >= 2), "duplicate", "No extras available to swap.");
+      renderStickerList(refs.extrasDuplicateList, getAvailableSwapIds(extraIds), "duplicate", "No extras available to swap.");
     }
 
     function renderStickerList(container, ids, className, emptyText) {
@@ -1966,7 +1984,7 @@
         `<option value="EXT" ${activeTradeCode === "EXT" ? "selected" : ""}>Extras</option>`
       ].join("");
 
-      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myDuplicates = new Set(getAvailableSwapIds(getAlbumIds(), activeSavedTradeId));
       const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
       refs.tradeQuickGrid.innerHTML = getTradeEntryIds().map(id => {
         const needSelected = manualTrade.needs.has(id);
@@ -2054,7 +2072,7 @@
     }
 
     function getSwapIds() {
-      return sortIds(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      return getAvailableSwapIds();
     }
 
     function formatGroupedStickerText(ids) {
@@ -2312,7 +2330,7 @@
 
     function renderTrade() {
       const parsed = getTradeInput();
-      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myDuplicates = new Set(getAvailableSwapIds(getAlbumIds(), activeSavedTradeId));
       const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
 
       const canGive = sortIds([...parsed.needs].filter(id => myDuplicates.has(id)));
@@ -2349,7 +2367,7 @@
 
     function getCurrentTradeProposal() {
       const parsed = getTradeInput();
-      const myDuplicates = new Set(getAlbumIds().filter(id => getStickerValue(id) >= 2));
+      const myDuplicates = new Set(getAvailableSwapIds(getAlbumIds(), activeSavedTradeId));
       const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
       const canGive = sortIds([...parsed.needs].filter(id => myDuplicates.has(id)));
       const canReceive = sortIds([...parsed.swaps].filter(id => myMissing.has(id)));
@@ -2418,10 +2436,14 @@
       if (!trade) return;
       state.savedTrades.unshift(trade);
       state.savedTrades = state.savedTrades.slice(0, 50);
-      saveState();
+      activeSavedTradeId = "";
+      manualTrade.needs.clear();
+      manualTrade.swaps.clear();
+      refs.tradeInput.value = "";
       refs.tradeNameInput.value = "";
-      renderSavedTrades();
-      setStatus("Trade saved.");
+      saveState();
+      render();
+      setStatus("Trade saved and swaps reserved.");
     }
 
     function copyCurrentTrade() {
@@ -2449,7 +2471,7 @@
           <div class="saved-trade-head">
             <div>
               <div class="saved-trade-title">${escapeHtml(trade.name)}</div>
-              <div class="saved-trade-meta">${new Date(trade.savedAt).toLocaleString()} | Give ${trade.give.length} | Receive ${trade.receive.length}</div>
+              <div class="saved-trade-meta">${new Date(trade.savedAt).toLocaleString()} | Reserved ${trade.give.length} swap${trade.give.length === 1 ? "" : "s"} | Receive ${trade.receive.length}</div>
             </div>
             <div class="saved-trade-actions">
               <button class="button" type="button" data-action="copy-saved-trade" data-id="${trade.id}">Copy</button>
@@ -2486,9 +2508,10 @@
 
     function deleteSavedTrade(id) {
       state.savedTrades = state.savedTrades.filter(trade => trade.id !== id);
+      if (activeSavedTradeId === id) activeSavedTradeId = "";
       saveState();
-      renderSavedTrades();
-      setStatus("Saved trade deleted.");
+      render();
+      setStatus("Saved trade deleted and swaps released.");
     }
 
     function loadSavedTrade(id) {
@@ -2496,6 +2519,7 @@
       if (!trade) return;
       manualTrade.needs.clear();
       manualTrade.swaps.clear();
+      activeSavedTradeId = trade.id;
       trade.give.forEach(id => manualTrade.needs.add(id));
       trade.receive.forEach(id => manualTrade.swaps.add(id));
       refs.tradeInput.value = "";
@@ -2717,6 +2741,7 @@
     }
 
     function toggleManualTrade(id) {
+      activeSavedTradeId = "";
       if (activeTradeMode === "needs") {
         if (manualTrade.needs.has(id)) {
           manualTrade.needs.delete(id);
@@ -2738,6 +2763,7 @@
     }
 
     function clearManualTrade() {
+      activeSavedTradeId = "";
       manualTrade.needs.clear();
       manualTrade.swaps.clear();
       renderTradeQuick();
@@ -2747,6 +2773,7 @@
     }
 
     function clearTradeAll() {
+      activeSavedTradeId = "";
       refs.tradeInput.value = "";
       manualTrade.needs.clear();
       manualTrade.swaps.clear();
@@ -2799,6 +2826,7 @@
       }
       if (action === "trade-toggle") toggleManualTrade(target.dataset.id);
       if (action === "trade-remove") {
+        activeSavedTradeId = "";
         manualTrade[target.dataset.mode].delete(target.dataset.id);
         renderTradeQuick();
         renderTrade();
