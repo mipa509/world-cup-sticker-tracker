@@ -1,4 +1,4 @@
-﻿# World Cup Sticker Tracker
+# World Cup Sticker Tracker
 
 Standalone mobile-first sticker tracker for the 2026 World Cup album.
 
@@ -20,9 +20,11 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 ## Trade workflow
 Use `They need` and `They swap` in the Trade Matcher, choose a team, and tap sticker numbers. The app shows what you can give and receive.
 
-When you click `Save Trade`, the stickers you are giving are reserved. Reserved stickers no longer appear in your available swap list or future trade matches, so the next person only sees what is still available. Deleting a saved trade releases those swaps again.
+When you click `Save Trade`, the stickers you are giving are reserved. Reserved stickers no longer appear in your available swap list or future trade matches, so the next person only sees what is still available.
 
-Saved trades can be copied, loaded back into the matcher, deleted, and included in JSON backups.
+If the trade is accepted, click `Complete` on the saved trade. The app removes those outgoing swaps from your spare pool, marks the incoming stickers as owned, and keeps the trade as completed history. Deleting a reserved trade cancels it and releases the swaps; deleting a completed trade only removes the history entry.
+
+Saved trades can be copied, loaded back into the matcher while reserved, completed, deleted, and included in JSON backups.
 
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
