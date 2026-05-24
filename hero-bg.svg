@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 420" role="img" aria-label="Football sticker album graphic background">
+  <defs>
+    <linearGradient id="pitch" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#06382b"/>
+      <stop offset="1" stop-color="#157b59"/>
+    </linearGradient>
+    <pattern id="pitchGrid" width="92" height="92" patternUnits="userSpaceOnUse">
+      <path d="M92 0H0V92" fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2"/>
+    </pattern>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#001f17" flood-opacity="0.26"/>
+    </filter>
+  </defs>
+  <rect width="1400" height="420" fill="url(#pitch)"/>
+  <rect width="1400" height="420" fill="url(#pitchGrid)"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="5">
+    <rect x="48" y="42" width="1304" height="336" rx="12"/>
+    <path d="M700 42v336"/>
+    <circle cx="700" cy="210" r="78"/>
+  </g>
+  <g filter="url(#softShadow)" transform="translate(900 58)">
+    <rect x="0" y="0" width="360" height="270" rx="14" fill="#f6fbf7" fill-opacity="0.96"/>
+    <g transform="translate(28 30)">
+      <rect x="0" y="0" width="42" height="42" fill="#edc468"/>
+      <rect x="58" y="0" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <rect x="116" y="0" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="174" y="0" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <rect x="232" y="0" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="0" y="58" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <rect x="58" y="58" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="116" y="58" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <rect x="174" y="58" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="232" y="58" width="42" height="42" fill="#edc468"/>
+      <rect x="0" y="116" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="58" y="116" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <rect x="116" y="116" width="42" height="42" fill="#edc468"/>
+      <rect x="174" y="116" width="42" height="42" fill="#a8dfc3"/>
+      <rect x="232" y="116" width="42" height="42" fill="#ffffff" stroke="#c9d8cf"/>
+      <g fill="none" stroke="#084a36" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21l8 8 14-20"/>
+        <path d="M128 21l8 8 14-20"/>
+        <path d="M244 21l8 8 14-20"/>
+        <path d="M70 79l8 8 14-20"/>
+        <path d="M186 79l8 8 14-20"/>
+        <path d="M12 137l8 8 14-20"/>
+        <path d="M186 137l8 8 14-20"/>
+      </g>
+    </g>
+  </g>
+  <g opacity="0.32" fill="#ffffff">
+    <circle cx="128" cy="322" r="18"/>
+    <circle cx="184" cy="322" r="18"/>
+    <circle cx="240" cy="322" r="18"/>
+  </g>
+</svg>

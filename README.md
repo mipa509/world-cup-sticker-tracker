@@ -1,6 +1,8 @@
 # World Cup Sticker Tracker
 
-Standalone mobile-first sticker tracker for the 2026 World Cup album.
+Free unofficial mobile-first sticker tracker app for the 2026 World Cup album. It helps football sticker collectors track needs, swaps, duplicate stickers, saved trades, JSON backups, and shareable matrix images for Panini-style sticker album swaps.
+
+This is an unofficial fan-made collector tool and is not affiliated with FIFA, Panini, or any official tournament or sticker album brand.
 
 ## Live app
 Open the app here:
@@ -11,6 +13,7 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 
 ## What it does
 - Track owned, needed, and swap stickers for all 48 World Cup 2026 teams.
+- Use it as a World Cup sticker album app for quick collecting, swaps, and trade checks on mobile.
 - Use the matrix grid for a quick album overview.
 - Export the matrix as a PNG for sharing in chats or Facebook groups.
 - Export/copy your current swap list.

@@ -1,0 +1,11 @@
+{
+  "name": "World Cup Sticker Tracker",
+  "short_name": "Sticker Tracker",
+  "description": "Unofficial World Cup 2026 sticker album tracker for needs, swaps, duplicates and trades.",
+  "start_url": "/world-cup-sticker-tracker/",
+  "scope": "/world-cup-sticker-tracker/",
+  "display": "standalone",
+  "background_color": "#f3f5ef",
+  "theme_color": "#0f6b4e",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
