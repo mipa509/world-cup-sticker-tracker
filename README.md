@@ -12,7 +12,7 @@ https://mipa509.github.io/world-cup-sticker-tracker/
 On iPhone, open the link in Safari and use Share > Add to Home Screen for the best app-like experience.
 
 ## What it does
-- Track owned, needed, and swap stickers for all 48 World Cup 2026 teams.
+- Track owned, needed, and swap stickers for all 48 World Cup 2026 teams, including multiple spare copies of the same sticker.
 - Use it as a World Cup sticker album app for quick collecting, swaps, and trade checks on mobile.
 - Use the matrix grid for a quick album overview.
 - Export the matrix as a PNG for sharing in chats or Facebook groups.
