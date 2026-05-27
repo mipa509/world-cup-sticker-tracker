@@ -1855,8 +1855,8 @@
     const DIRECTORY_SEARCH_RADIUS_KM = 100;
     const APPROX_LOCATION_DECIMALS = 2;
     const GEOCODE_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
-    const SUPABASE_URL = "";
-    const SUPABASE_ANON_KEY = "";
+    const SUPABASE_URL = "https://bqcorefiziiddydxcwog.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_SfgAJ3MbC_gjBqgMW4QZYw_HPnviHQ7";
     const SUPABASE_CONFIGURED = /^https?:\/\/.+/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 20;
     const directoryClient = window.supabase && SUPABASE_CONFIGURED
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
