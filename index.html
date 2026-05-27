@@ -1637,7 +1637,7 @@
             <div class="directory-row">
               <div>
                 <label for="profileAreaInput">Area</label>
-                <input id="profileAreaInput" type="text" maxlength="80" placeholder="Town or area">
+                <input id="profileAreaInput" type="text" maxlength="80" placeholder="Town, postcode, city, country">
               </div>
               <div>
                 <label for="profileContactType">Contact</label>
@@ -1652,7 +1652,8 @@
             <label for="profileContactInput">Contact detail</label>
             <input id="profileContactInput" type="text" maxlength="180" placeholder="Phone, link, email, or handle">
             <div class="directory-actions">
-              <button class="button" type="button" data-action="use-profile-area">Use My Area</button>
+              <button class="button" type="button" data-action="use-profile-area">Use Browser Location</button>
+              <button class="button" type="button" data-action="geocode-profile-area">Use Typed Area</button>
               <button class="button" type="button" data-action="publish-profile">Publish Profile</button>
               <button class="button" type="button" data-action="pause-profile">Pause</button>
               <button class="button" type="button" data-action="refresh-traders">Refresh Matches</button>
@@ -1755,6 +1756,7 @@
     const DEFAULT_EXTRA_COUNT = 40;
     const DIRECTORY_SEARCH_RADIUS_KM = 100;
     const APPROX_LOCATION_DECIMALS = 2;
+    const GEOCODE_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
     const SUPABASE_URL = "";
     const SUPABASE_ANON_KEY = "";
     const SUPABASE_CONFIGURED = /^https?:\/\/.+/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 20;
@@ -1866,6 +1868,8 @@
       profile: null,
       contact: null,
       coords: null,
+      coordsSource: "",
+      coordsQuery: "",
       matches: [],
       selectedTraderId: "",
       selectedContact: null,
@@ -3198,6 +3202,40 @@
       };
     }
 
+    function roundDirectoryCoords(lat, lng) {
+      return {
+        lat: Number(Number(lat).toFixed(APPROX_LOCATION_DECIMALS)),
+        lng: Number(Number(lng).toFixed(APPROX_LOCATION_DECIMALS))
+      };
+    }
+
+    function hasUsableCoords(coords) {
+      return coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng);
+    }
+
+    function getProfileCoords() {
+      if (hasUsableCoords(directoryState.coords)) return directoryState.coords;
+      if (!directoryState.profile) return null;
+      const coords = {
+        lat: Number(directoryState.profile.approx_lat),
+        lng: Number(directoryState.profile.approx_lng)
+      };
+      return hasUsableCoords(coords) ? coords : null;
+    }
+
+    function setProfileCoords(coords, source, query = "") {
+      directoryState.coords = coords;
+      directoryState.coordsSource = source;
+      directoryState.coordsQuery = normalizeText(query);
+      renderTraderMap();
+    }
+
+    function shouldGeocodeTypedArea(areaLabel) {
+      if (!hasUsableCoords(directoryState.coords)) return true;
+      if (directoryState.coordsSource === "browser") return false;
+      return directoryState.coordsQuery !== normalizeText(areaLabel);
+    }
+
     function getBrowserPosition() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
@@ -3214,16 +3252,47 @@
 
     async function useProfileArea() {
       try {
-        setDirectoryStatus("Checking area.");
+        setDirectoryStatus("Checking browser location.");
         const position = await getBrowserPosition();
-        directoryState.coords = getRoundedCoords(position);
+        const coords = getRoundedCoords(position);
+        setProfileCoords(coords, "browser");
         if (!refs.profileAreaInput.value.trim()) {
-          refs.profileAreaInput.value = `Approx ${directoryState.coords.lat}, ${directoryState.coords.lng}`;
+          refs.profileAreaInput.value = `Approx ${coords.lat}, ${coords.lng}`;
         }
-        setDirectoryStatus(`Area set to ${directoryState.coords.lat}, ${directoryState.coords.lng}.`);
-        renderTraderMap();
+        setDirectoryStatus(`Browser area set to ${coords.lat}, ${coords.lng}.`);
       } catch (error) {
-        setDirectoryStatus(error.message || "Area unavailable.");
+        const denied = String(error.message || "").toLowerCase().includes("denied") || error.code === 1;
+        setDirectoryStatus(denied ? "Browser location denied. Use Typed Area instead." : (error.message || "Browser location unavailable."));
+      }
+    }
+
+    async function geocodeProfileArea(showStatus = true) {
+      const areaLabel = refs.profileAreaInput.value.trim();
+      if (!areaLabel) {
+        if (showStatus) setDirectoryStatus("Enter a town, postcode, city, or country.");
+        return null;
+      }
+
+      if (showStatus) setDirectoryStatus("Looking up typed area.");
+      try {
+        const url = new URL(GEOCODE_SEARCH_URL);
+        url.searchParams.set("format", "jsonv2");
+        url.searchParams.set("limit", "1");
+        url.searchParams.set("addressdetails", "1");
+        url.searchParams.set("q", areaLabel);
+        const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("Area lookup failed.");
+        const results = await response.json();
+        const result = Array.isArray(results) ? results[0] : null;
+        if (!result) throw new Error("Area not found. Add a country or use browser location.");
+        const coords = roundDirectoryCoords(result.lat, result.lon);
+        if (!hasUsableCoords(coords)) throw new Error("Area lookup returned invalid coordinates.");
+        setProfileCoords(coords, "typed", areaLabel);
+        if (showStatus) setDirectoryStatus(`Typed area matched to ${coords.lat}, ${coords.lng}.`);
+        return coords;
+      } catch (error) {
+        if (showStatus) setDirectoryStatus(error.message || "Area lookup failed.");
+        return null;
       }
     }
 
@@ -3308,10 +3377,10 @@
         refs.profileNameInput.value = profile.display_name || "";
         refs.profileStatusInput.value = profile.status || "open";
         refs.profileAreaInput.value = profile.area_label || "";
-        directoryState.coords = {
+        setProfileCoords({
           lat: Number(profile.approx_lat),
           lng: Number(profile.approx_lng)
-        };
+        }, "profile", profile.area_label || "");
       }
       if (contact) {
         refs.profileContactType.value = contact.contact_type || "whatsapp";
@@ -3330,22 +3399,22 @@
       const areaLabel = refs.profileAreaInput.value.trim();
       const contactType = refs.profileContactType.value || "other";
       const contactValue = refs.profileContactInput.value.trim();
-      const coords = directoryState.coords || (directoryState.profile ? {
-        lat: Number(directoryState.profile.approx_lat),
-        lng: Number(directoryState.profile.approx_lng)
-      } : null);
       const snapshot = getDirectorySnapshot();
 
       if (!areaLabel) {
         setDirectoryStatus("Add an area label.");
         return;
       }
-      if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
-        setDirectoryStatus("Use My Area first.");
-        return;
-      }
       if (!contactValue) {
         setDirectoryStatus("Add contact detail.");
+        return;
+      }
+
+      const coords = shouldGeocodeTypedArea(areaLabel)
+        ? await geocodeProfileArea(false)
+        : getProfileCoords();
+      if (!hasUsableCoords(coords)) {
+        setDirectoryStatus("Use Browser Location or Use Typed Area first.");
         return;
       }
 
@@ -3414,10 +3483,7 @@
     async function refreshNearbyTraders(showStatus = true) {
       if (!directoryClient || !directoryState.session) return;
 
-      const coords = directoryState.coords || (directoryState.profile ? {
-        lat: Number(directoryState.profile.approx_lat),
-        lng: Number(directoryState.profile.approx_lng)
-      } : null);
+      const coords = getProfileCoords();
       if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
         if (showStatus) setDirectoryStatus("Set your area first.");
         directoryState.matches = [];
@@ -4014,6 +4080,7 @@
       if (action === "sign-in-directory") await sendDirectoryMagicLink();
       if (action === "sign-out-directory") await signOutDirectory();
       if (action === "use-profile-area") await useProfileArea();
+      if (action === "geocode-profile-area") await geocodeProfileArea();
       if (action === "publish-profile") await publishTraderProfile();
       if (action === "pause-profile") await pauseTraderProfile();
       if (action === "refresh-traders") await refreshNearbyTraders();

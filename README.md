@@ -33,7 +33,7 @@ Saved trades can be copied, loaded back into the matcher while reserved, complet
 ## Trader directory
 The nearby trader directory is opt-in. Your browser album remains the source of truth; clicking `Publish Profile` sends a snapshot of your current needs and available swaps to Supabase. Reserved swaps are excluded from the published snapshot.
 
-Location is rounded in the browser before it is saved. The app stores an approximate latitude/longitude plus your area label, not an exact address. Contact details are stored separately and are revealed only when another signed-in user has at least one sticker match with your profile.
+Location is rounded in the browser before it is saved. You can use browser location or type a town, postcode, city, or country; typed areas are looked up through OpenStreetMap Nominatim and then stored as approximate latitude/longitude plus your area label. Contact details are stored separately and are revealed only when another signed-in user has at least one sticker match with your profile.
 
 The directory does not include in-app chat. `Offer Trade` saves a balanced trade locally, copies a message, and opens the external contact channel when possible.
 
