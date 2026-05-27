@@ -68,6 +68,29 @@ Until those two public constants are set, the local album tracker still works an
 
 Before public launch, remove any temporary test trader rows you created while trying the directory. Delete test contacts first, then test profiles, then remove the test users from Supabase Authentication if you no longer need them.
 
+## Launch checklist
+Run the latest `supabase/schema.sql` in Supabase before deploying this branch. The app expects the hardened RPC signatures and RLS policies from that file.
+
+To remove temporary test traders from Supabase SQL editor, replace the email addresses first:
+
+```sql
+with test_users as (
+  select id from auth.users
+  where email in ('test-trader-1@example.com', 'test-trader-2@example.com')
+)
+delete from public.trader_contacts
+where user_id in (select id from test_users);
+
+with test_users as (
+  select id from auth.users
+  where email in ('test-trader-1@example.com', 'test-trader-2@example.com')
+)
+delete from public.trader_profiles
+where user_id in (select id from test_users);
+```
+
+After that, remove the same test users from Supabase Authentication if they are not needed.
+
 ## Publish your own copy
 You can fork this repository or copy the files into your own GitHub repository and enable GitHub Pages.
 
