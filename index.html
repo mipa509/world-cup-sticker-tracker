@@ -1980,7 +1980,7 @@
         { name: "Brazil", code: "BRA", flagCode: "br", flag: "🇧🇷", aliases: ["brazil"] },
         { name: "Morocco", code: "MAR", flagCode: "ma", flag: "🇲🇦", aliases: ["morocco", "maroc"] },
         { name: "Haiti", code: "HAI", flagCode: "ht", flag: "🇭🇹", aliases: ["haiti"] },
-        { name: "Scotland", code: "SCO", flagCode: "gb-sct", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}", aliases: ["scotland"] }
+        { name: "Scotland", code: "SCO", flagCode: "gb-sct", flag: "SCO", aliases: ["scotland"] }
       ] },
       { group: "D", teams: [
         { name: "United States", code: "USA", flagCode: "us", flag: "🇺🇸", aliases: ["united states", "usa", "us", "u s a"] },
@@ -2031,7 +2031,7 @@
         { name: "Colombia", code: "COL", flagCode: "co", flag: "🇨🇴", aliases: ["colombia"] }
       ] },
       { group: "L", teams: [
-        { name: "England", code: "ENG", flagCode: "gb-eng", flag: "\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", aliases: ["england"] },
+        { name: "England", code: "ENG", flagCode: "gb-eng", flag: "ENG", aliases: ["england"] },
         { name: "Croatia", code: "CRO", flagCode: "hr", flag: "🇭🇷", aliases: ["croatia"] },
         { name: "Ghana", code: "GHA", flagCode: "gh", flag: "🇬🇭", aliases: ["ghana"] },
         { name: "Panama", code: "PAN", flagCode: "pa", flag: "🇵🇦", aliases: ["panama"] }
@@ -2042,6 +2042,10 @@
     const TEAM_BY_CODE = new Map(TEAMS.map(team => [team.code, team]));
     const CODE_LOOKUP = new Map(TEAMS.map(team => [team.code.toLowerCase(), team]));
     const NAME_ALIASES = [];
+    const SPECIAL_FLAG_SVGS = {
+      "gb-eng": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36"><rect width="60" height="36" fill="#fff"/><path d="M0 14h60v8H0zM26 0h8v36h-8z" fill="#c8102e"/></svg>`,
+      "gb-sct": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36"><rect width="60" height="36" fill="#0065bd"/><polygon points="0,0 6,0 60,32 60,36 54,36 0,4" fill="#fff"/><polygon points="60,0 54,0 0,32 0,36 6,36 60,4" fill="#fff"/></svg>`
+    };
 
     TEAMS.forEach(team => {
       [team.name, ...team.aliases].forEach(alias => {
@@ -2156,9 +2160,14 @@
 
     function flagUrl(team) {
       if (!team || !team.flagCode) return "";
+      if (SPECIAL_FLAG_SVGS[team.flagCode]) return svgDataUrl(SPECIAL_FLAG_SVGS[team.flagCode]);
       return team.flagCode.includes("-")
         ? `https://flagcdn.com/${team.flagCode}.svg`
         : `https://flagcdn.com/w80/${team.flagCode}.png`;
+    }
+
+    function svgDataUrl(svg) {
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
     }
 
     function renderFlag(team, extraClass = "") {
@@ -2754,21 +2763,6 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 800);
     }
 
-    async function shareOrDownloadBlob(blob, filename, title) {
-      try {
-        const file = new File([blob], filename, { type: blob.type });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title });
-          setStatus("Share sheet opened.");
-          return;
-        }
-      } catch (error) {
-        // Fall back to normal download below.
-      }
-      downloadBlob(blob, filename);
-      setStatus(`${filename} saved.`);
-    }
-
     function getSwapIds() {
       return getAvailableSwapIds();
     }
@@ -2828,25 +2822,75 @@
       return teams.length === TEAMS.length ? "All teams" : "Current view";
     }
 
-    function saveMatrixPng() {
+    async function saveMatrixPng() {
       const teams = getMatrixExportTeams();
-      const canvas = drawMatrixCanvas(teams);
       const filename = `world-cup-matrix-${getDateStamp()}.png`;
+      setStatus("Preparing matrix PNG.");
+      const flagImages = await loadFlagImages(teams);
+      const canvas = drawMatrixCanvas(teams, flagImages);
+      downloadCanvasPng(canvas, filename, () => drawMatrixCanvas(teams, new Map()));
+    }
+
+    function downloadCanvasPng(canvas, filename, fallbackFactory) {
+      const saveBlob = blob => {
+        if (blob) {
+          downloadBlob(blob, filename);
+          setStatus(`${filename} saved.`);
+          return;
+        }
+        if (fallbackFactory) downloadCanvasPng(fallbackFactory(), filename, null);
+        if (!fallbackFactory) setStatus("Matrix PNG could not be saved.");
+      };
+
       if (canvas.toBlob) {
-        canvas.toBlob(blob => {
-          if (blob) shareOrDownloadBlob(blob, filename, "World Cup sticker matrix");
-        }, "image/png");
-      } else {
+        try {
+          canvas.toBlob(saveBlob, "image/png");
+          return;
+        } catch (error) {
+          if (fallbackFactory) {
+            downloadCanvasPng(fallbackFactory(), filename, null);
+            return;
+          }
+        }
+      }
+
+      try {
         const dataUrl = canvas.toDataURL("image/png");
         const anchor = document.createElement("a");
         anchor.href = dataUrl;
         anchor.download = filename;
         anchor.click();
         setStatus(`${filename} saved.`);
+      } catch (error) {
+        setStatus("Matrix PNG could not be saved.");
       }
     }
 
-    function drawMatrixCanvas(teams) {
+    function loadFlagImage(team) {
+      const url = flagUrl(team);
+      if (!url) return Promise.resolve(null);
+      return new Promise(resolve => {
+        const img = new Image();
+        const timeout = window.setTimeout(() => resolve(null), 4000);
+        if (!url.startsWith("data:")) img.crossOrigin = "anonymous";
+        img.onload = () => {
+          window.clearTimeout(timeout);
+          resolve(img);
+        };
+        img.onerror = () => {
+          window.clearTimeout(timeout);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    }
+
+    async function loadFlagImages(teams) {
+      const entries = await Promise.all(teams.map(async team => [team.code, await loadFlagImage(team)]));
+      return new Map(entries.filter(([, image]) => image));
+    }
+
+    function drawMatrixCanvas(teams, flagImages = new Map()) {
       const cell = 31;
       const rowHeight = 30;
       const left = 228;
@@ -2894,7 +2938,7 @@
         const y = top + rowIndex * rowHeight;
         ctx.fillStyle = rowIndex % 2 ? "#fbfcfa" : "#ffffff";
         ctx.fillRect(24, y, width - 48, rowHeight);
-        drawFlagMark(ctx, team, 32, y + 6, 28, 18);
+        drawFlagMark(ctx, team, 32, y + 6, 28, 18, flagImages.get(team.code));
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#101713";
@@ -2986,29 +3030,42 @@
       ctx.stroke();
     }
 
-    function countryEmoji(flagCode) {
-      const code = String(flagCode || "").toUpperCase();
-      if (!/^[A-Z]{2}$/.test(code)) return "";
-      return [...code].map(char => String.fromCodePoint(127397 + char.charCodeAt(0))).join("");
-    }
-
-    function drawFlagMark(ctx, team, x, y, width, height) {
+    function drawFlagMark(ctx, team, x, y, width, height, image = null) {
       ctx.fillStyle = "#ffffff";
       ctx.strokeStyle = "#d8dfd8";
       roundRect(ctx, x, y, width, height, 3);
       ctx.fill();
       ctx.stroke();
-      const emoji = countryEmoji(team.flagCode);
+
+      if (image) {
+        ctx.save();
+        roundRect(ctx, x + 1, y + 1, width - 2, height - 2, 2);
+        ctx.clip();
+        drawImageCover(ctx, image, x + 1, y + 1, width - 2, height - 2);
+        ctx.restore();
+        return;
+      }
+
+      ctx.fillStyle = "#2464a2";
+      ctx.font = "800 8px Arial, Helvetica, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      if (emoji) {
-        ctx.font = "16px 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif";
-        ctx.fillText(emoji, x + width / 2, y + height / 2 + 0.5);
+      ctx.fillText(team.code, x + width / 2, y + height / 2 + 0.5);
+    }
+
+    function drawImageCover(ctx, image, x, y, width, height) {
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const boxRatio = width / height;
+      let drawWidth = width;
+      let drawHeight = height;
+      if (imageRatio > boxRatio) {
+        drawWidth = height * imageRatio;
       } else {
-        ctx.fillStyle = "#2464a2";
-        ctx.font = "800 8px Arial, Helvetica, sans-serif";
-        ctx.fillText(team.code, x + width / 2, y + height / 2 + 0.5);
+        drawHeight = width / imageRatio;
       }
+      const drawX = x + (width - drawWidth) / 2;
+      const drawY = y + (height - drawHeight) / 2;
+      ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
     }
 
     function drawTruncatedText(ctx, text, x, y, maxWidth) {
