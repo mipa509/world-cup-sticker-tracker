@@ -30,6 +30,13 @@ If the trade is accepted, click `Complete` on the saved trade. The app removes t
 
 Saved trades can be copied, loaded back into the matcher while reserved, completed, deleted, and included in JSON backups.
 
+## Trader directory
+The nearby trader directory is opt-in. Your browser album remains the source of truth; clicking `Publish Profile` sends a snapshot of your current needs and available swaps to Supabase. Reserved swaps are excluded from the published snapshot.
+
+Location is rounded in the browser before it is saved. The app stores an approximate latitude/longitude plus your area label, not an exact address. Contact details are stored separately and are revealed only when another signed-in user has at least one sticker match with your profile.
+
+The directory does not include in-app chat. `Offer Trade` saves a balanced trade locally, copies a message, and opens the external contact channel when possible.
+
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
 
@@ -45,6 +52,17 @@ That means:
 
 ## Use locally
 Open `index.html` in a browser, or serve the folder with any static file server.
+
+## Supabase setup
+The static app needs a Supabase project before the nearby trader directory can work.
+
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the Supabase SQL editor.
+3. Enable email magic-link auth in Supabase.
+4. Add your public project URL and anon key to `SUPABASE_URL` and `SUPABASE_ANON_KEY` near the top of `index.html`.
+5. Keep the service-role key out of this repository and out of the browser.
+
+Until those two public constants are set, the local album tracker still works and the directory panel shows a configuration status.
 
 ## Publish your own copy
 You can fork this repository or copy the files into your own GitHub repository and enable GitHub Pages.
