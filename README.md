@@ -19,6 +19,7 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 - Export/copy your current swap list.
 - Match trades quickly by pasting another person's needs and optional swaps into separate boxes.
 - Save proposed trades so agreed swaps are reserved automatically.
+- Optionally publish a trader profile to find nearby sticker matches through Supabase.
 
 ## Trade workflow
 Paste another collector's list into `Their needs` to instantly see which of your swaps you can offer. If they also share a swap list, paste it into `Their swaps` to see what helps your album and to build a balanced proposal. The quick team picker still works for adding individual stickers by tap.

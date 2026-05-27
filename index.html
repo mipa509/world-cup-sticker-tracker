@@ -10,6 +10,7 @@
   <meta name="theme-color" content="#0f6b4e">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="World Cup Sticker Tracker">
   <meta property="og:title" content="World Cup 2026 Sticker Tracker App">
@@ -1168,6 +1169,196 @@
       margin-top: 14px;
     }
 
+    .directory-panel {
+      margin-top: 14px;
+    }
+
+    .directory-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: 12px;
+    }
+
+    .directory-card,
+    .trader-card,
+    .trader-detail {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .directory-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .directory-form {
+      display: grid;
+      gap: 8px;
+    }
+
+    .directory-form label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .directory-form input,
+    .directory-form select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .directory-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .directory-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .directory-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .directory-status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .match-surface {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(320px, 1.2fr);
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .trader-list {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      min-width: 0;
+      max-height: 520px;
+      overflow: auto;
+    }
+
+    .trader-card {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .trader-card.active {
+      border-color: var(--pitch);
+      box-shadow: inset 0 0 0 1px rgba(15, 107, 78, 0.28);
+    }
+
+    .trader-card-head,
+    .trader-detail-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .trader-name {
+      overflow-wrap: anywhere;
+      font-weight: 900;
+    }
+
+    .distance-pill {
+      display: inline-flex;
+      min-height: 28px;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--pitch-dark);
+      background: var(--mint);
+      font-size: 0.76rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .match-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .match-stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #f8faf7;
+    }
+
+    .match-stat strong,
+    .match-stat span {
+      display: block;
+    }
+
+    .match-stat strong {
+      font-size: 1.12rem;
+      line-height: 1;
+    }
+
+    .match-stat span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .trader-map {
+      min-height: 520px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #e7ece6;
+    }
+
+    .trader-detail {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px;
+    }
+
+    .trader-detail.hidden {
+      display: none !important;
+    }
+
+    .contact-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      max-width: 100%;
+      border: 1px solid #aac8e5;
+      border-radius: 999px;
+      padding: 5px 10px;
+      overflow-wrap: anywhere;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
     .extras-config label {
       color: var(--muted);
       font-weight: 700;
@@ -1214,7 +1405,9 @@
       }
 
       .section-grid,
-      .trade-layout {
+      .trade-layout,
+      .directory-grid,
+      .match-surface {
         grid-template-columns: 1fr;
       }
     }
@@ -1286,10 +1479,23 @@
       .quick-controls,
       .manual-trade-lists,
       .trade-paste-grid,
+      .directory-row,
       .save-trade-form,
       .saved-trade-summary,
       .saved-trade-head {
         grid-template-columns: 1fr;
+      }
+
+      .match-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .trader-list {
+        max-height: none;
+      }
+
+      .trader-map {
+        min-height: 360px;
       }
 
       .quick-number-grid {
@@ -1309,6 +1515,7 @@
         </div>
       </div>
       <div class="top-actions">
+        <button class="ghost-button" type="button" data-action="scroll-traders">Nearby</button>
         <button class="ghost-button" type="button" data-action="export">Export</button>
         <button class="ghost-button" type="button" data-action="import">Import</button>
         <button class="danger-button" type="button" data-action="reset">Reset</button>
@@ -1398,6 +1605,71 @@
       </div>
     </section>
 
+    <section id="traderDirectory" class="panel directory-panel">
+      <h2>Nearby Traders</h2>
+      <div class="directory-grid">
+        <div class="directory-card">
+          <div class="directory-form">
+            <label for="authEmailInput">Email</label>
+            <input id="authEmailInput" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+            <div class="directory-actions">
+              <button class="button" type="button" data-action="sign-in-directory">Send Magic Link</button>
+              <button class="button" type="button" data-action="sign-out-directory">Sign Out</button>
+            </div>
+            <div id="authStatus" class="directory-status"></div>
+          </div>
+
+          <div class="directory-form">
+            <div class="directory-row">
+              <div>
+                <label for="profileNameInput">Display name</label>
+                <input id="profileNameInput" type="text" maxlength="60" placeholder="Mika">
+              </div>
+              <div>
+                <label for="profileStatusInput">Status</label>
+                <select id="profileStatusInput">
+                  <option value="open">Open to trade</option>
+                  <option value="busy">Busy</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </div>
+            </div>
+            <div class="directory-row">
+              <div>
+                <label for="profileAreaInput">Area</label>
+                <input id="profileAreaInput" type="text" maxlength="80" placeholder="Town or area">
+              </div>
+              <div>
+                <label for="profileContactType">Contact</label>
+                <select id="profileContactType">
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="email">Email</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            <label for="profileContactInput">Contact detail</label>
+            <input id="profileContactInput" type="text" maxlength="180" placeholder="Phone, link, email, or handle">
+            <div class="directory-actions">
+              <button class="button" type="button" data-action="use-profile-area">Use My Area</button>
+              <button class="button" type="button" data-action="publish-profile">Publish Profile</button>
+              <button class="button" type="button" data-action="pause-profile">Pause</button>
+              <button class="button" type="button" data-action="refresh-traders">Refresh Matches</button>
+            </div>
+            <div id="profileSummary" class="directory-meta"></div>
+            <div id="profileStatus" class="directory-status"></div>
+          </div>
+        </div>
+
+        <div class="match-surface">
+          <div id="traderMatches" class="trader-list"></div>
+          <div id="traderMap" class="trader-map" aria-label="Nearby trader map"></div>
+        </div>
+      </div>
+      <div id="traderDetail" class="trader-detail hidden"></div>
+    </section>
+
     <section class="panel data-panel">
       <h2>Trade Matcher</h2>
       <div class="trade-layout">
@@ -1474,11 +1746,21 @@
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const STORAGE_KEY = "wc26-sticker-tracker-v1";
     const TEAM_STICKER_COUNT = 20;
     const MAX_STICKER_COUNT = 9;
     const DEFAULT_EXTRA_COUNT = 40;
+    const DIRECTORY_SEARCH_RADIUS_KM = 100;
+    const APPROX_LOCATION_DECIMALS = 2;
+    const SUPABASE_URL = "";
+    const SUPABASE_ANON_KEY = "";
+    const SUPABASE_CONFIGURED = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.startsWith("ey");
+    const directoryClient = window.supabase && SUPABASE_CONFIGURED
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
 
     const GROUPS = [
       { group: "A", teams: [
@@ -1579,6 +1861,18 @@
       needs: new Set(),
       swaps: new Set()
     };
+    const directoryState = {
+      session: null,
+      profile: null,
+      contact: null,
+      coords: null,
+      matches: [],
+      selectedTraderId: "",
+      selectedContact: null,
+      loading: false,
+      map: null,
+      markerLayer: null
+    };
 
     const refs = {
       statusLine: document.getElementById("statusLine"),
@@ -1614,6 +1908,19 @@
       tradeResults: document.getElementById("tradeResults"),
       tradeNameInput: document.getElementById("tradeNameInput"),
       savedTrades: document.getElementById("savedTrades"),
+      traderDirectory: document.getElementById("traderDirectory"),
+      authEmailInput: document.getElementById("authEmailInput"),
+      authStatus: document.getElementById("authStatus"),
+      profileNameInput: document.getElementById("profileNameInput"),
+      profileStatusInput: document.getElementById("profileStatusInput"),
+      profileAreaInput: document.getElementById("profileAreaInput"),
+      profileContactType: document.getElementById("profileContactType"),
+      profileContactInput: document.getElementById("profileContactInput"),
+      profileSummary: document.getElementById("profileSummary"),
+      profileStatus: document.getElementById("profileStatus"),
+      traderMatches: document.getElementById("traderMatches"),
+      traderMap: document.getElementById("traderMap"),
+      traderDetail: document.getElementById("traderDetail"),
       importFile: document.getElementById("importFile"),
       extrasCount: document.getElementById("extrasCount")
     };
@@ -2677,6 +2984,582 @@
       setStatus("Text saved as a file.");
     }
 
+    function getDirectorySnapshot() {
+      const ids = getAlbumIds();
+      return {
+        needs: sortIds(ids.filter(id => getStickerValue(id) === 0)),
+        swaps: getAvailableSwapIds(ids)
+      };
+    }
+
+    function renderDirectory() {
+      renderDirectoryProfileSummary();
+      renderDirectoryMatches();
+      renderTraderDetail();
+      renderTraderMap();
+    }
+
+    function renderDirectoryProfileSummary() {
+      const snapshot = getDirectorySnapshot();
+      refs.profileSummary.textContent = `Snapshot: ${snapshot.needs.length} needs | ${snapshot.swaps.length} swaps`;
+
+      if (!directoryClient) {
+        refs.authStatus.textContent = "Supabase not configured.";
+        refs.profileStatus.textContent = "Set SUPABASE_URL and SUPABASE_ANON_KEY in index.html.";
+        return;
+      }
+
+      const email = directoryState.session?.user?.email || "";
+      refs.authStatus.textContent = email ? `Signed in as ${email}` : "Signed out.";
+      if (!refs.profileStatus.textContent) {
+        refs.profileStatus.textContent = directoryState.profile
+          ? `Published ${formatShortDate(directoryState.profile.updated_at)}.`
+          : "Profile not published.";
+      }
+    }
+
+    function renderDirectoryMatches() {
+      if (!directoryClient) {
+        refs.traderMatches.innerHTML = `<p class="empty-state">Directory backend not configured.</p>`;
+        return;
+      }
+
+      if (!directoryState.session) {
+        refs.traderMatches.innerHTML = `<p class="empty-state">Sign in to see nearby traders.</p>`;
+        return;
+      }
+
+      if (directoryState.loading) {
+        refs.traderMatches.innerHTML = `<p class="empty-state">Loading traders.</p>`;
+        return;
+      }
+
+      if (!directoryState.matches.length) {
+        refs.traderMatches.innerHTML = `<p class="empty-state">No nearby matches yet.</p>`;
+        return;
+      }
+
+      refs.traderMatches.innerHTML = directoryState.matches.map(match => {
+        const active = match.userId === directoryState.selectedTraderId ? " active" : "";
+        return `
+          <button class="trader-card${active}" type="button" data-action="select-trader" data-id="${escapeHtml(match.userId)}">
+            <span class="trader-card-head">
+              <span>
+                <span class="trader-name">${escapeHtml(match.displayName)}</span>
+                <span class="directory-meta">${escapeHtml(match.areaLabel)} | ${escapeHtml(match.statusLabel)}</span>
+              </span>
+              <span class="distance-pill">${formatDistance(match.distanceKm)}</span>
+            </span>
+            ${renderMatchStats(match)}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderMatchStats(match) {
+      return `
+        <span class="match-stats">
+          <span class="match-stat"><strong>${match.balancedCount}</strong><span>balanced</span></span>
+          <span class="match-stat"><strong>${match.canGive.length}</strong><span>I can give</span></span>
+          <span class="match-stat"><strong>${match.canReceive.length}</strong><span>they can give</span></span>
+        </span>
+      `;
+    }
+
+    function renderTraderDetail() {
+      const match = getSelectedTraderMatch();
+      if (!match) {
+        refs.traderDetail.classList.add("hidden");
+        refs.traderDetail.innerHTML = "";
+        return;
+      }
+
+      const contact = directoryState.selectedContact?.userId === match.userId
+        ? directoryState.selectedContact
+        : null;
+      refs.traderDetail.classList.remove("hidden");
+      refs.traderDetail.innerHTML = `
+        <div class="trader-detail-head">
+          <div>
+            <div class="trader-name">${escapeHtml(match.displayName)}</div>
+            <div class="directory-meta">${escapeHtml(match.areaLabel)} | ${formatDistance(match.distanceKm)} | ${escapeHtml(match.statusLabel)} | ${formatShortDate(match.updatedAt)}</div>
+          </div>
+          <button class="button" type="button" data-action="close-trader-detail">Close</button>
+        </div>
+        ${renderMatchStats(match)}
+        <div class="manual-trade-lists">
+          <div>
+            <h3>I can give</h3>
+            ${renderTradeResultList(match.canGive, "trade", "No matching swaps.")}
+          </div>
+          <div>
+            <h3>They can give</h3>
+            ${renderTradeResultList(match.canReceive, "receive", "No matching needs.")}
+          </div>
+        </div>
+        <div class="directory-actions">
+          <button class="button" type="button" data-action="reveal-contact" data-id="${escapeHtml(match.userId)}">Reveal Contact</button>
+          <button class="button" type="button" data-action="offer-trader" data-id="${escapeHtml(match.userId)}">Offer Trade</button>
+          ${contact ? renderContactLink(contact, match) : ""}
+        </div>
+      `;
+    }
+
+    function renderContactLink(contact, match) {
+      const message = formatDirectoryOfferMessage(match, {
+        give: match.canGive.slice(0, match.balancedCount),
+        receive: match.canReceive.slice(0, match.balancedCount)
+      });
+      const href = buildContactHref(contact, message);
+      const label = `${contact.contactType}: ${contact.contactValue}`;
+      if (!href) return `<span class="contact-chip">${escapeHtml(label)}</span>`;
+      return `<a class="contact-chip" href="${escapeHtml(href)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+    }
+
+    function renderTraderMap() {
+      if (!refs.traderMap) return;
+
+      if (!window.L) {
+        refs.traderMap.innerHTML = `<p class="empty-state matrix-empty">Map unavailable.</p>`;
+        return;
+      }
+
+      const points = [];
+      if (directoryState.coords) points.push([directoryState.coords.lat, directoryState.coords.lng]);
+      directoryState.matches.forEach(match => {
+        if (Number.isFinite(match.lat) && Number.isFinite(match.lng)) points.push([match.lat, match.lng]);
+      });
+
+      if (!directoryState.map) {
+        directoryState.map = L.map(refs.traderMap, { scrollWheelZoom: false }).setView([20, 0], 2);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors"
+        }).addTo(directoryState.map);
+        directoryState.markerLayer = L.layerGroup().addTo(directoryState.map);
+      }
+
+      directoryState.markerLayer.clearLayers();
+      if (directoryState.coords) {
+        L.circleMarker([directoryState.coords.lat, directoryState.coords.lng], {
+          radius: 9,
+          color: "#084a36",
+          fillColor: "#0f6b4e",
+          fillOpacity: 0.82
+        }).bindPopup("My area").addTo(directoryState.markerLayer);
+      }
+
+      directoryState.matches.forEach(match => {
+        if (!Number.isFinite(match.lat) || !Number.isFinite(match.lng)) return;
+        L.marker([match.lat, match.lng])
+          .bindPopup(`${escapeHtml(match.displayName)}<br>${match.balancedCount} balanced`)
+          .on("click", () => {
+            directoryState.selectedTraderId = match.userId;
+            directoryState.selectedContact = null;
+            renderDirectory();
+          })
+          .addTo(directoryState.markerLayer);
+      });
+
+      if (points.length > 1) {
+        directoryState.map.fitBounds(points, { padding: [28, 28], maxZoom: 12 });
+      } else if (points.length === 1) {
+        directoryState.map.setView(points[0], 11);
+      } else {
+        directoryState.map.setView([20, 0], 2);
+      }
+
+      window.setTimeout(() => directoryState.map.invalidateSize(), 0);
+    }
+
+    function formatShortDate(value) {
+      if (!value) return "not published";
+      return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    }
+
+    function formatDistance(distanceKm) {
+      if (!Number.isFinite(distanceKm)) return "nearby";
+      if (distanceKm < 1) return "<1 km";
+      if (distanceKm < 10) return `${distanceKm.toFixed(1)} km`;
+      return `${Math.round(distanceKm)} km`;
+    }
+
+    function getSelectedTraderMatch() {
+      return directoryState.matches.find(match => match.userId === directoryState.selectedTraderId) || null;
+    }
+
+    function setDirectoryStatus(message) {
+      refs.profileStatus.textContent = message;
+    }
+
+    function getRoundedCoords(position) {
+      return {
+        lat: Number(position.coords.latitude.toFixed(APPROX_LOCATION_DECIMALS)),
+        lng: Number(position.coords.longitude.toFixed(APPROX_LOCATION_DECIMALS))
+      };
+    }
+
+    function getBrowserPosition() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation unavailable."));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          maximumAge: 300000,
+          timeout: 12000
+        });
+      });
+    }
+
+    async function useProfileArea() {
+      try {
+        setDirectoryStatus("Checking area.");
+        const position = await getBrowserPosition();
+        directoryState.coords = getRoundedCoords(position);
+        if (!refs.profileAreaInput.value.trim()) {
+          refs.profileAreaInput.value = `Approx ${directoryState.coords.lat}, ${directoryState.coords.lng}`;
+        }
+        setDirectoryStatus(`Area set to ${directoryState.coords.lat}, ${directoryState.coords.lng}.`);
+        renderTraderMap();
+      } catch (error) {
+        setDirectoryStatus(error.message || "Area unavailable.");
+      }
+    }
+
+    async function initDirectory() {
+      renderDirectory();
+      if (!directoryClient) return;
+
+      directoryClient.auth.onAuthStateChange(async (_event, session) => {
+        directoryState.session = session;
+        directoryState.selectedContact = null;
+        await loadDirectoryProfile();
+        await refreshNearbyTraders(false);
+        renderDirectory();
+      });
+
+      const { data, error } = await directoryClient.auth.getSession();
+      if (error) {
+        setDirectoryStatus(error.message);
+        return;
+      }
+      directoryState.session = data.session;
+      await loadDirectoryProfile();
+      await refreshNearbyTraders(false);
+      renderDirectory();
+    }
+
+    async function sendDirectoryMagicLink() {
+      if (!directoryClient) {
+        setDirectoryStatus("Supabase not configured.");
+        return;
+      }
+
+      const email = refs.authEmailInput.value.trim();
+      if (!email) {
+        setDirectoryStatus("Enter an email address.");
+        return;
+      }
+
+      setDirectoryStatus("Sending magic link.");
+      const { error } = await directoryClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href.split("#")[0] }
+      });
+      setDirectoryStatus(error ? error.message : "Magic link sent.");
+    }
+
+    async function signOutDirectory() {
+      if (!directoryClient) return;
+      await directoryClient.auth.signOut();
+      directoryState.session = null;
+      directoryState.profile = null;
+      directoryState.contact = null;
+      directoryState.matches = [];
+      directoryState.selectedTraderId = "";
+      directoryState.selectedContact = null;
+      renderDirectory();
+      setDirectoryStatus("Signed out.");
+    }
+
+    async function loadDirectoryProfile() {
+      if (!directoryClient || !directoryState.session) {
+        directoryState.profile = null;
+        directoryState.contact = null;
+        return;
+      }
+
+      const userId = directoryState.session.user.id;
+      const [profileResult, contactResult] = await Promise.all([
+        directoryClient.from("trader_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        directoryClient.from("trader_contacts").select("*").eq("user_id", userId).maybeSingle()
+      ]);
+
+      directoryState.profile = profileResult.error ? null : profileResult.data;
+      directoryState.contact = contactResult.error ? null : contactResult.data;
+      hydrateDirectoryForm();
+    }
+
+    function hydrateDirectoryForm() {
+      const profile = directoryState.profile;
+      const contact = directoryState.contact;
+      if (profile) {
+        refs.profileNameInput.value = profile.display_name || "";
+        refs.profileStatusInput.value = profile.status || "open";
+        refs.profileAreaInput.value = profile.area_label || "";
+        directoryState.coords = {
+          lat: Number(profile.approx_lat),
+          lng: Number(profile.approx_lng)
+        };
+      }
+      if (contact) {
+        refs.profileContactType.value = contact.contact_type || "whatsapp";
+        refs.profileContactInput.value = contact.contact_value || "";
+      }
+    }
+
+    async function publishTraderProfile() {
+      if (!directoryClient || !directoryState.session) {
+        setDirectoryStatus(directoryClient ? "Sign in first." : "Supabase not configured.");
+        return;
+      }
+
+      const displayName = refs.profileNameInput.value.trim() || directoryState.session.user.email?.split("@")[0] || "Trader";
+      const status = refs.profileStatusInput.value || "open";
+      const areaLabel = refs.profileAreaInput.value.trim();
+      const contactType = refs.profileContactType.value || "other";
+      const contactValue = refs.profileContactInput.value.trim();
+      const coords = directoryState.coords || (directoryState.profile ? {
+        lat: Number(directoryState.profile.approx_lat),
+        lng: Number(directoryState.profile.approx_lng)
+      } : null);
+      const snapshot = getDirectorySnapshot();
+
+      if (!areaLabel) {
+        setDirectoryStatus("Add an area label.");
+        return;
+      }
+      if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
+        setDirectoryStatus("Use My Area first.");
+        return;
+      }
+      if (!contactValue) {
+        setDirectoryStatus("Add contact detail.");
+        return;
+      }
+
+      const userId = directoryState.session.user.id;
+      const active = status !== "paused";
+      setDirectoryStatus("Publishing profile.");
+
+      const profilePayload = {
+        user_id: userId,
+        display_name: displayName.slice(0, 60),
+        status,
+        area_label: areaLabel.slice(0, 80),
+        approx_lat: coords.lat,
+        approx_lng: coords.lng,
+        needs: snapshot.needs,
+        swaps: snapshot.swaps,
+        active,
+        updated_at: new Date().toISOString()
+      };
+      const contactPayload = {
+        user_id: userId,
+        contact_type: contactType,
+        contact_value: contactValue.slice(0, 180),
+        updated_at: new Date().toISOString()
+      };
+
+      const profileResult = await directoryClient.from("trader_profiles").upsert(profilePayload, { onConflict: "user_id" });
+      if (profileResult.error) {
+        setDirectoryStatus(profileResult.error.message);
+        return;
+      }
+
+      const contactResult = await directoryClient.from("trader_contacts").upsert(contactPayload, { onConflict: "user_id" });
+      if (contactResult.error) {
+        setDirectoryStatus(contactResult.error.message);
+        return;
+      }
+
+      await loadDirectoryProfile();
+      await refreshNearbyTraders(false);
+      renderDirectory();
+      setDirectoryStatus(active ? "Profile published." : "Profile saved as paused.");
+    }
+
+    async function pauseTraderProfile() {
+      if (!directoryClient || !directoryState.session) {
+        setDirectoryStatus(directoryClient ? "Sign in first." : "Supabase not configured.");
+        return;
+      }
+
+      const { error } = await directoryClient
+        .from("trader_profiles")
+        .update({ active: false, status: "paused", updated_at: new Date().toISOString() })
+        .eq("user_id", directoryState.session.user.id);
+      if (error) {
+        setDirectoryStatus(error.message);
+        return;
+      }
+      refs.profileStatusInput.value = "paused";
+      await loadDirectoryProfile();
+      await refreshNearbyTraders(false);
+      renderDirectory();
+      setDirectoryStatus("Profile paused.");
+    }
+
+    async function refreshNearbyTraders(showStatus = true) {
+      if (!directoryClient || !directoryState.session) return;
+
+      const coords = directoryState.coords || (directoryState.profile ? {
+        lat: Number(directoryState.profile.approx_lat),
+        lng: Number(directoryState.profile.approx_lng)
+      } : null);
+      if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
+        if (showStatus) setDirectoryStatus("Set your area first.");
+        directoryState.matches = [];
+        return;
+      }
+
+      const snapshot = getDirectorySnapshot();
+      directoryState.loading = true;
+      if (showStatus) setDirectoryStatus("Refreshing matches.");
+      renderDirectory();
+
+      const { data, error } = await directoryClient.rpc("match_nearby_traders", {
+        viewer_needs: snapshot.needs,
+        viewer_swaps: snapshot.swaps,
+        viewer_lat: coords.lat,
+        viewer_lng: coords.lng,
+        max_distance_km: DIRECTORY_SEARCH_RADIUS_KM
+      });
+
+      directoryState.loading = false;
+      if (error) {
+        directoryState.matches = [];
+        setDirectoryStatus(error.message);
+        renderDirectory();
+        return;
+      }
+
+      directoryState.matches = (data || []).map(normalizeTraderMatch);
+      if (!directoryState.matches.some(match => match.userId === directoryState.selectedTraderId)) {
+        directoryState.selectedTraderId = directoryState.matches[0]?.userId || "";
+        directoryState.selectedContact = null;
+      }
+      renderDirectory();
+      if (showStatus) setDirectoryStatus(`Found ${directoryState.matches.length} match${directoryState.matches.length === 1 ? "" : "es"}.`);
+    }
+
+    function normalizeTraderMatch(row) {
+      return {
+        userId: String(row.user_id || ""),
+        displayName: String(row.display_name || "Trader"),
+        statusLabel: String(row.status || "open"),
+        areaLabel: String(row.area_label || "Nearby"),
+        lat: Number(row.approx_lat),
+        lng: Number(row.approx_lng),
+        needs: sortIds(row.needs || []),
+        swaps: sortIds(row.swaps || []),
+        canGive: sortIds(row.can_give || []),
+        canReceive: sortIds(row.can_receive || []),
+        balancedCount: Number(row.balanced_count || 0),
+        oneWayCount: Number(row.one_way_count || 0),
+        distanceKm: Number(row.distance_km),
+        updatedAt: row.updated_at || ""
+      };
+    }
+
+    async function revealTraderContact(userId, showStatus = true) {
+      const match = directoryState.matches.find(item => item.userId === userId);
+      if (!match || !directoryClient || !directoryState.session) return null;
+
+      const snapshot = getDirectorySnapshot();
+      if (showStatus) setDirectoryStatus("Loading contact.");
+      const { data, error } = await directoryClient.rpc("reveal_trader_contact", {
+        trader_id: match.userId,
+        viewer_needs: snapshot.needs,
+        viewer_swaps: snapshot.swaps
+      });
+
+      if (error) {
+        if (showStatus) setDirectoryStatus(error.message);
+        return null;
+      }
+
+      const contact = data && data[0] ? {
+        userId: match.userId,
+        contactType: data[0].contact_type || "other",
+        contactValue: data[0].contact_value || ""
+      } : null;
+      directoryState.selectedContact = contact;
+      renderDirectory();
+      if (showStatus) setDirectoryStatus(contact ? "Contact loaded." : "Contact unavailable.");
+      return contact;
+    }
+
+    async function offerTrader(userId) {
+      const match = directoryState.matches.find(item => item.userId === userId);
+      if (!match) return;
+      if (!match.balancedCount) {
+        setDirectoryStatus("No balanced trade to offer.");
+        return;
+      }
+
+      const trade = sanitizeSavedTrade({
+        id: `directory-trade-${Date.now()}`,
+        name: `Trade with ${match.displayName}`,
+        savedAt: new Date().toISOString(),
+        status: "reserved",
+        give: match.canGive.slice(0, match.balancedCount),
+        receive: match.canReceive.slice(0, match.balancedCount)
+      });
+      if (!trade) return;
+
+      state.savedTrades.unshift(trade);
+      state.savedTrades = state.savedTrades.slice(0, 50);
+      saveState();
+
+      const message = formatDirectoryOfferMessage(match, trade);
+      const contact = directoryState.selectedContact?.userId === match.userId
+        ? directoryState.selectedContact
+        : await revealTraderContact(match.userId, false);
+      await copyText(message, "Trade offer copied and saved.");
+      if (contact) openContact(contact, message);
+      render();
+    }
+
+    function formatDirectoryOfferMessage(match, trade) {
+      return [
+        `Hi ${match.displayName}, I found a World Cup sticker match.`,
+        `I can offer: ${trade.give.length ? formatGroupedStickerInline(trade.give) : "no matching swaps"}.`,
+        `Useful for me: ${trade.receive.length ? formatGroupedStickerInline(trade.receive) : "no matching needs"}.`,
+        `Balanced trade: ${Math.min(trade.give.length, trade.receive.length)} sticker${Math.min(trade.give.length, trade.receive.length) === 1 ? "" : "s"}.`
+      ].join("\n");
+    }
+
+    function buildContactHref(contact, message) {
+      const value = String(contact.contactValue || "").trim();
+      const encodedMessage = encodeURIComponent(message);
+      if (!value) return "";
+      if (contact.contactType === "email") return `mailto:${encodeURIComponent(value)}?subject=World%20Cup%20sticker%20trade&body=${encodedMessage}`;
+      if (contact.contactType === "whatsapp") {
+        const digits = value.replace(/[^\d]/g, "");
+        if (digits.length >= 8) return `https://wa.me/${digits}?text=${encodedMessage}`;
+      }
+      if (/^https?:\/\//i.test(value)) return value;
+      if (contact.contactType === "facebook") return `https://www.facebook.com/${encodeURIComponent(value.replace(/^@/, ""))}`;
+      return "";
+    }
+
+    function openContact(contact, message) {
+      const href = buildContactHref(contact, message);
+      if (href) window.open(href, "_blank", "noopener");
+    }
+
     function saveCurrentTrade() {
       const proposal = getCurrentTradeProposal();
       if (!proposal.give.length && !proposal.receive.length) {
@@ -3088,6 +3971,7 @@
       renderTradeQuick();
       renderTrade();
       renderSavedTrades();
+      renderDirectory();
     }
 
     function clearManualTrade() {
@@ -3121,11 +4005,30 @@
       });
     }
 
-    function handleAction(event) {
+    async function handleAction(event) {
       const target = event.target.closest("[data-action]");
       if (!target) return;
 
       const action = target.dataset.action;
+      if (action === "scroll-traders") refs.traderDirectory.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (action === "sign-in-directory") await sendDirectoryMagicLink();
+      if (action === "sign-out-directory") await signOutDirectory();
+      if (action === "use-profile-area") await useProfileArea();
+      if (action === "publish-profile") await publishTraderProfile();
+      if (action === "pause-profile") await pauseTraderProfile();
+      if (action === "refresh-traders") await refreshNearbyTraders();
+      if (action === "select-trader") {
+        directoryState.selectedTraderId = target.dataset.id;
+        directoryState.selectedContact = null;
+        renderDirectory();
+      }
+      if (action === "close-trader-detail") {
+        directoryState.selectedTraderId = "";
+        directoryState.selectedContact = null;
+        renderDirectory();
+      }
+      if (action === "reveal-contact") await revealTraderContact(target.dataset.id);
+      if (action === "offer-trader") await offerTrader(target.dataset.id);
       if (action === "sticker") cycleSticker(target.dataset.id);
       if (action === "group") {
         activeGroup = target.dataset.group;
@@ -3197,6 +4100,7 @@
     });
 
     render();
+    initDirectory();
   </script>
 </body>
 </html>
