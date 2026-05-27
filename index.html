@@ -164,6 +164,7 @@
     }
 
     .button,
+    .nearby-button,
     .ghost-button,
     .danger-button {
       min-height: 40px;
@@ -174,6 +175,13 @@
       background: #fff;
       font-weight: 700;
       transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .nearby-button {
+      border-color: rgba(255, 255, 255, 0.86);
+      color: #062d22;
+      background: linear-gradient(180deg, #f7d776, #d9a832);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 9px 22px rgba(0, 0, 0, 0.22);
     }
 
     .button {
@@ -198,6 +206,7 @@
     }
 
     .button:hover,
+    .nearby-button:hover,
     .ghost-button:hover,
     .danger-button:hover,
     .tab-button:hover,
@@ -205,6 +214,12 @@
     .sticker:hover,
     .matrix-cell:hover {
       transform: translateY(-1px);
+    }
+
+    .nearby-button:hover {
+      border-color: #fff;
+      background: linear-gradient(180deg, #ffe28f, #e6b23d);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.54), 0 11px 26px rgba(0, 0, 0, 0.26);
     }
 
     .button:hover {
@@ -224,6 +239,7 @@
     }
 
     .button:focus-visible,
+    .nearby-button:focus-visible,
     .ghost-button:focus-visible,
     .danger-button:focus-visible {
       outline: 3px solid rgba(36, 100, 162, 0.36);
@@ -1716,11 +1732,7 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="ghost-button" type="button" data-action="scroll-traders">Nearby</button>
-        <button class="ghost-button" type="button" data-action="export">Export</button>
-        <button class="ghost-button" type="button" data-action="import">Import</button>
-        <button class="danger-button" type="button" data-action="reset">Reset</button>
-        <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+        <button class="nearby-button" type="button" data-action="scroll-traders">Find Nearby Trades</button>
       </div>
     </header>
 
@@ -1956,11 +1968,21 @@
       <summary>
         <span class="collapse-title">
           <strong>Bulk Edit & Data</strong>
-          <span class="collapse-meta">Open for extras setup and visible-sticker bulk changes.</span>
+          <span class="collapse-meta">Open for backups, reset, extras setup, and visible-sticker bulk changes.</span>
         </span>
         <span class="collapse-cue" aria-hidden="true"></span>
       </summary>
       <div class="bulk-data-body collapse-body">
+        <div class="bulk-edit-card">
+          <h3>Backup & Restore</h3>
+          <p class="control-help">Download a JSON backup before moving phones, changing browser, or clearing data.</p>
+          <div class="data-actions">
+            <button class="button" type="button" data-action="export">Download Backup</button>
+            <button class="button" type="button" data-action="import">Restore Backup</button>
+            <button class="danger-button" type="button" data-action="reset">Reset Tracker</button>
+            <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+          </div>
+        </div>
         <div class="bulk-edit-card">
           <h3>Extras Setup</h3>
           <p class="control-help">Changes how many configurable extra stickers appear in the album.</p>
