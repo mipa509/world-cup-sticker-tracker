@@ -1861,6 +1861,7 @@
               <div>
                 <label for="profileAreaInput">Area</label>
                 <input id="profileAreaInput" type="text" maxlength="80" placeholder="Town, postcode, city, country">
+                <div class="directory-meta">Typed area lookup uses OpenStreetMap. Only rounded coordinates are saved.</div>
               </div>
               <div>
                 <label for="profileContactType">Contact</label>
@@ -1986,7 +1987,7 @@
     </footer>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const STORAGE_KEY = "wc26-sticker-tracker-v1";
@@ -3363,6 +3364,14 @@
         return;
       }
 
+      if (!hasActiveDirectoryProfile()) {
+        const message = directoryState.profile
+          ? "Your profile is paused. Publish an active profile to see nearby matches."
+          : "Publish your profile to see nearby matches.";
+        refs.traderMatches.innerHTML = `<p class="empty-state">${message}</p>`;
+        return;
+      }
+
       if (directoryState.loading) {
         refs.traderMatches.innerHTML = `<p class="empty-state">Loading traders.</p>`;
         return;
@@ -3521,6 +3530,10 @@
       return directoryState.matches.find(match => match.userId === directoryState.selectedTraderId) || null;
     }
 
+    function hasActiveDirectoryProfile() {
+      return Boolean(directoryState.profile && directoryState.profile.active);
+    }
+
     function setDirectoryStatus(message) {
       refs.profileStatus.textContent = message;
     }
@@ -3545,6 +3558,11 @@
 
     function getProfileCoords() {
       if (hasUsableCoords(directoryState.coords)) return directoryState.coords;
+      if (!directoryState.profile) return null;
+      return getPublishedProfileCoords();
+    }
+
+    function getPublishedProfileCoords() {
       if (!directoryState.profile) return null;
       const coords = {
         lat: Number(directoryState.profile.approx_lat),
@@ -3813,23 +3831,28 @@
     async function refreshNearbyTraders(showStatus = true) {
       if (!directoryClient || !directoryState.session) return;
 
-      const coords = getProfileCoords();
+      if (!hasActiveDirectoryProfile()) {
+        directoryState.matches = [];
+        directoryState.selectedTraderId = "";
+        directoryState.selectedContact = null;
+        if (showStatus) setDirectoryStatus("Publish an active profile first.");
+        renderDirectory();
+        return;
+      }
+
+      const coords = getPublishedProfileCoords();
       if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng)) {
         if (showStatus) setDirectoryStatus("Set your area first.");
         directoryState.matches = [];
         return;
       }
+      setProfileCoords(coords, "profile", directoryState.profile.area_label || "");
 
-      const snapshot = getDirectorySnapshot();
       directoryState.loading = true;
       if (showStatus) setDirectoryStatus("Refreshing matches.");
       renderDirectory();
 
       const { data, error } = await directoryClient.rpc("match_nearby_traders", {
-        viewer_needs: snapshot.needs,
-        viewer_swaps: snapshot.swaps,
-        viewer_lat: coords.lat,
-        viewer_lng: coords.lng,
         max_distance_km: DIRECTORY_SEARCH_RADIUS_KM
       });
 
@@ -3873,12 +3896,9 @@
       const match = directoryState.matches.find(item => item.userId === userId);
       if (!match || !directoryClient || !directoryState.session) return null;
 
-      const snapshot = getDirectorySnapshot();
       if (showStatus) setDirectoryStatus("Loading contact.");
       const { data, error } = await directoryClient.rpc("reveal_trader_contact", {
-        trader_id: match.userId,
-        viewer_needs: snapshot.needs,
-        viewer_swaps: snapshot.swaps
+        trader_id: match.userId
       });
 
       if (error) {
@@ -3941,13 +3961,26 @@
       const value = String(contact.contactValue || "").trim();
       const encodedMessage = encodeURIComponent(message);
       if (!value) return "";
-      if (contact.contactType === "email") return `mailto:${encodeURIComponent(value)}?subject=World%20Cup%20sticker%20trade&body=${encodedMessage}`;
+      if (contact.contactType === "email" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        return `mailto:${encodeURIComponent(value)}?subject=World%20Cup%20sticker%20trade&body=${encodedMessage}`;
+      }
       if (contact.contactType === "whatsapp") {
         const digits = value.replace(/[^\d]/g, "");
         if (digits.length >= 8) return `https://wa.me/${digits}?text=${encodedMessage}`;
       }
-      if (/^https?:\/\//i.test(value)) return value;
-      if (contact.contactType === "facebook") return `https://www.facebook.com/${encodeURIComponent(value.replace(/^@/, ""))}`;
+      if (contact.contactType === "facebook") {
+        try {
+          const url = new URL(value);
+          const host = url.hostname.toLowerCase();
+          if ((url.protocol === "https:" || url.protocol === "http:") && ["facebook.com", "www.facebook.com", "m.facebook.com", "fb.me"].includes(host)) {
+            url.protocol = "https:";
+            return url.toString();
+          }
+        } catch (_error) {
+          const handle = value.replace(/^@/, "").replace(/^(?:https?:\/\/)?(?:www\.|m\.)?facebook\.com\//i, "");
+          return `https://www.facebook.com/${encodeURIComponent(handle)}`;
+        }
+      }
       return "";
     }
 

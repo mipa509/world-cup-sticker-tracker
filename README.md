@@ -40,7 +40,9 @@ The directory does not include in-app chat. `Offer Trade` saves a balanced trade
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
 
-Each person's sticker data stays in their own browser using `localStorage`. The app does not upload collections to GitHub, does not share your data with me, and does not use a shared database.
+Each person's main album data stays in their own browser using `localStorage`. The app does not upload full collections to GitHub. If someone opts into Nearby Traders, the app publishes only their display name, status, approximate area, current needs, available swaps, and contact detail to Supabase.
+
+Nearby Traders protects contact details separately from public profile rows. Other signed-in users can see a matched profile through the directory, but the database only reveals contact details when both users have active published profiles with at least one sticker match.
 
 That means:
 
@@ -63,6 +65,8 @@ The static app needs a Supabase project before the nearby trader directory can w
 5. Keep the service-role key out of this repository and out of the browser.
 
 Until those two public constants are set, the local album tracker still works and the directory panel shows a configuration status.
+
+Before public launch, remove any temporary test trader rows you created while trying the directory. Delete test contacts first, then test profiles, then remove the test users from Supabase Authentication if you no longer need them.
 
 ## Publish your own copy
 You can fork this repository or copy the files into your own GitHub repository and enable GitHub Pages.
