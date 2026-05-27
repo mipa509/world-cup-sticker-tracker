@@ -42,13 +42,6 @@ That means:
 - To back up or move phones, use `Export` to save a JSON file, then `Import` it later.
 - JSON backups include your album state and any saved trade proposals.
 
-## Suggested sharing text
-Track your World Cup 2026 sticker album, swaps, needs, and trade matches here:
-
-https://mipa509.github.io/world-cup-sticker-tracker/
-
-Open it in Safari/Chrome and add it to your home screen. Your data is stored only on your own device. Use Export/Import JSON for backup or moving between devices.
-
 ## Use locally
 Open `index.html` in a browser, or serve the folder with any static file server.
 
