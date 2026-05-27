@@ -167,8 +167,8 @@ as $$
       p.approx_lng,
       p.needs,
       p.swaps,
-      coalesce((select array_agg(id order by id) from unnest(p.needs) as id where id = any(v.swaps)), '{}'::text[]) as can_give,
-      coalesce((select array_agg(id order by id) from unnest(p.swaps) as id where id = any(v.needs)), '{}'::text[]) as can_receive,
+      coalesce((select array_agg(wanted.id order by wanted.id) from unnest(p.needs) as wanted(id) where wanted.id = any(v.swaps)), '{}'::text[]) as can_give,
+      coalesce((select array_agg(offered.id order by offered.id) from unnest(p.swaps) as offered(id) where offered.id = any(v.needs)), '{}'::text[]) as can_receive,
       public.distance_km(v.lat, v.lng, p.approx_lat, p.approx_lng) as distance_km,
       p.updated_at
     from public.trader_profiles p
@@ -225,8 +225,8 @@ as $$
     and p.user_id <> auth.uid()
     and p.active = true
     and (
-      exists (select 1 from unnest(p.needs) as id where id = any(coalesce(viewer_swaps, '{}'::text[])))
-      or exists (select 1 from unnest(p.swaps) as id where id = any(coalesce(viewer_needs, '{}'::text[])))
+      exists (select 1 from unnest(p.needs) as wanted(id) where wanted.id = any(coalesce(viewer_swaps, '{}'::text[])))
+      or exists (select 1 from unnest(p.swaps) as offered(id) where offered.id = any(coalesce(viewer_needs, '{}'::text[])))
     )
   limit 1;
 $$;

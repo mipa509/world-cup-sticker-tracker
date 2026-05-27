@@ -1757,7 +1757,7 @@
     const APPROX_LOCATION_DECIMALS = 2;
     const SUPABASE_URL = "";
     const SUPABASE_ANON_KEY = "";
-    const SUPABASE_CONFIGURED = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.startsWith("ey");
+    const SUPABASE_CONFIGURED = /^https?:\/\/.+/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 20;
     const directoryClient = window.supabase && SUPABASE_CONFIGURED
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
@@ -3048,7 +3048,7 @@
                 <span class="trader-name">${escapeHtml(match.displayName)}</span>
                 <span class="directory-meta">${escapeHtml(match.areaLabel)} | ${escapeHtml(match.statusLabel)}</span>
               </span>
-              <span class="distance-pill">${formatDistance(match.distanceKm)}</span>
+              <span class="distance-pill">${escapeHtml(formatDistance(match.distanceKm))}</span>
             </span>
             ${renderMatchStats(match)}
           </button>
@@ -3082,7 +3082,7 @@
         <div class="trader-detail-head">
           <div>
             <div class="trader-name">${escapeHtml(match.displayName)}</div>
-            <div class="directory-meta">${escapeHtml(match.areaLabel)} | ${formatDistance(match.distanceKm)} | ${escapeHtml(match.statusLabel)} | ${formatShortDate(match.updatedAt)}</div>
+            <div class="directory-meta">${escapeHtml(match.areaLabel)} | ${escapeHtml(formatDistance(match.distanceKm))} | ${escapeHtml(match.statusLabel)} | ${escapeHtml(formatShortDate(match.updatedAt))}</div>
           </div>
           <button class="button" type="button" data-action="close-trader-detail">Close</button>
         </div>
