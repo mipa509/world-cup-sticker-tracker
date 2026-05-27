@@ -1262,6 +1262,65 @@
       padding: 12px;
     }
 
+    .account-banner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(36, 100, 162, 0.24);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--blue-soft);
+    }
+
+    .account-banner.is-signed-out {
+      border-color: rgba(90, 102, 95, 0.24);
+      background: #f8faf7;
+    }
+
+    .account-label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .account-name {
+      margin-top: 2px;
+      overflow-wrap: anywhere;
+      color: var(--ink);
+      font-size: 1.02rem;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .account-email {
+      margin-top: 2px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .account-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: #fff;
+      background: var(--pitch);
+      font-size: 0.78rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .account-banner.is-signed-out .account-pill {
+      color: var(--muted);
+      background: #e7ece6;
+    }
+
     .directory-form {
       display: grid;
       gap: 8px;
@@ -1528,6 +1587,14 @@
         width: 100%;
       }
 
+      .account-banner {
+        grid-template-columns: 1fr;
+      }
+
+      .account-pill {
+        justify-self: start;
+      }
+
       .team-grid,
       .list-columns {
         grid-template-columns: 1fr;
@@ -1707,6 +1774,7 @@
       <h2>Nearby Traders</h2>
       <div class="directory-grid">
         <div class="directory-card">
+          <div id="accountBanner" class="account-banner is-signed-out"></div>
           <div class="directory-form">
             <label for="authEmailInput">Email</label>
             <input id="authEmailInput" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
@@ -2014,6 +2082,7 @@
       tradeNameInput: document.getElementById("tradeNameInput"),
       savedTrades: document.getElementById("savedTrades"),
       traderDirectory: document.getElementById("traderDirectory"),
+      accountBanner: document.getElementById("accountBanner"),
       authEmailInput: document.getElementById("authEmailInput"),
       authStatus: document.getElementById("authStatus"),
       profileNameInput: document.getElementById("profileNameInput"),
@@ -3114,8 +3183,28 @@
       renderTraderMap();
     }
 
+    function renderAccountBanner() {
+      const email = directoryState.session?.user?.email || "";
+      const displayName = refs.profileNameInput.value.trim()
+        || directoryState.profile?.display_name
+        || (email ? email.split("@")[0] : "Not signed in");
+      const publishedText = directoryState.profile
+        ? `${directoryState.profile.active ? "Published" : "Paused"} ${formatShortDate(directoryState.profile.updated_at)}`
+        : "Not published";
+      refs.accountBanner.classList.toggle("is-signed-out", !email);
+      refs.accountBanner.innerHTML = `
+        <div>
+          <div class="account-label">${email ? "Signed in" : "Account"}</div>
+          <div class="account-name">${escapeHtml(displayName)}</div>
+          <div class="account-email">${email ? escapeHtml(email) : "Enter your email and send a magic link."}</div>
+        </div>
+        <div class="account-pill">${escapeHtml(email ? publishedText : "Signed out")}</div>
+      `;
+    }
+
     function renderDirectoryProfileSummary() {
       const snapshot = getDirectorySnapshot();
+      renderAccountBanner();
       refs.profileSummary.textContent = `Snapshot: ${snapshot.needs.length} needs | ${snapshot.swaps.length} swaps`;
 
       if (!directoryClient) {
@@ -4268,6 +4357,7 @@
     });
     refs.tradeNeedsInput.addEventListener("input", renderTrade);
     refs.tradeSwapsInput.addEventListener("input", renderTrade);
+    refs.profileNameInput.addEventListener("input", renderAccountBanner);
     refs.tradeTeamSelect.addEventListener("change", event => {
       activeTradeCode = event.target.value;
       renderTradeQuick();
