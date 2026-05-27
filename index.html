@@ -1271,6 +1271,30 @@
       margin-top: 14px;
     }
 
+    .bulk-data-body {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bulk-edit-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .bulk-edit-card h3 {
+      margin: 0 0 4px;
+      font-size: 0.98rem;
+    }
+
+    .control-help {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
     .directory-panel {
       margin-top: 14px;
     }
@@ -1927,18 +1951,34 @@
       </div>
     </section>
 
-    <section class="panel data-panel">
-      <h2>Data</h2>
-      <div class="extras-config">
-        <label for="extrasCount">Extras count</label>
-        <input id="extrasCount" type="number" min="0" max="200" step="1">
-        <button class="button" type="button" data-action="apply-extras">Apply</button>
+    <details class="panel collapse-panel data-panel" id="bulkDataPanel">
+      <summary>
+        <span class="collapse-title">
+          <strong>Bulk Edit & Data</strong>
+          <span class="collapse-meta">Open for extras setup and visible-sticker bulk changes.</span>
+        </span>
+        <span class="collapse-cue" aria-hidden="true"></span>
+      </summary>
+      <div class="bulk-data-body collapse-body">
+        <div class="bulk-edit-card">
+          <h3>Extras Setup</h3>
+          <p class="control-help">Changes how many configurable extra stickers appear in the album.</p>
+          <div class="extras-config">
+            <label for="extrasCount">Extras count</label>
+            <input id="extrasCount" type="number" min="0" max="200" step="1">
+            <button class="button" type="button" data-action="apply-extras">Apply</button>
+          </div>
+        </div>
+        <div class="bulk-edit-card">
+          <h3>Visible Stickers</h3>
+          <p class="control-help">Uses the current group, search, and filter. These buttons can change many stickers at once.</p>
+          <div class="data-actions">
+            <button class="button" type="button" data-action="mark-all-missing">Clear visible stickers</button>
+            <button class="button" type="button" data-action="mark-visible-owned">Mark visible owned</button>
+          </div>
+        </div>
       </div>
-      <div class="data-actions">
-        <button class="button" type="button" data-action="mark-all-missing">Clear visible stickers</button>
-        <button class="button" type="button" data-action="mark-visible-owned">Mark visible owned</button>
-      </div>
-    </section>
+    </details>
 
     <p class="footer-note">Group seed checked on 21 May 2026 against current FIFA and FourFourTwo listings.</p>
     <footer class="site-footer">
