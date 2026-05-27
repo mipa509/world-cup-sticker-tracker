@@ -732,6 +732,75 @@
       line-height: 1.2;
     }
 
+    .collapse-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .collapse-panel summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 54px;
+      padding: 14px;
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .collapse-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .collapse-title {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .collapse-title strong {
+      font-size: 1.02rem;
+      line-height: 1.15;
+    }
+
+    .collapse-meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .collapse-cue {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      min-height: 34px;
+      border: 1px solid rgba(15, 107, 78, 0.28);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--pitch-dark);
+      background: var(--mint);
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .collapse-cue::before {
+      content: "Open";
+    }
+
+    .collapse-panel[open] .collapse-cue::before {
+      content: "Close";
+    }
+
+    .collapse-body {
+      padding: 0 14px 14px;
+    }
+
+    .team-pages-panel {
+      margin-bottom: 14px;
+    }
+
     .list-columns {
       display: grid;
       grid-template-columns: 1fr;
@@ -1451,6 +1520,14 @@
         padding-bottom: 2px;
       }
 
+      .collapse-panel summary {
+        grid-template-columns: 1fr;
+      }
+
+      .collapse-cue {
+        width: 100%;
+      }
+
       .team-grid,
       .list-columns {
         grid-template-columns: 1fr;
@@ -1573,12 +1650,27 @@
       <div id="overviewMatrix" class="matrix-wrap" aria-label="Album grid overview"></div>
     </section>
 
-    <main id="teamGrid" class="team-grid" aria-label="Sticker pages"></main>
+    <details class="panel collapse-panel team-pages-panel" id="teamPagesPanel">
+      <summary>
+        <span class="collapse-title">
+          <strong>Team Sticker Pages</strong>
+          <span id="teamPagesSummary" class="collapse-meta">Open to edit stickers by team.</span>
+        </span>
+        <span class="collapse-cue" aria-hidden="true"></span>
+      </summary>
+      <section id="teamGrid" class="team-grid collapse-body" aria-label="Sticker pages"></section>
+    </details>
 
     <section class="section-grid">
-      <div class="panel">
-        <h2>My Lists</h2>
-        <div class="list-columns">
+      <details class="panel collapse-panel" id="myListsPanel">
+        <summary>
+          <span class="collapse-title">
+            <strong>My Lists</strong>
+            <span id="myListsSummary" class="collapse-meta">Open to view every needed and swap sticker.</span>
+          </span>
+          <span class="collapse-cue" aria-hidden="true"></span>
+        </summary>
+        <div class="list-columns collapse-body">
           <div class="list-block">
             <h3>Need</h3>
             <div id="missingList" class="sticker-list"></div>
@@ -1588,11 +1680,17 @@
             <div id="duplicateList" class="sticker-list"></div>
           </div>
         </div>
-      </div>
+      </details>
 
-      <div class="panel">
-        <h2>Extras</h2>
-        <div class="list-columns">
+      <details class="panel collapse-panel" id="extrasListsPanel">
+        <summary>
+          <span class="collapse-title">
+            <strong>Extras Lists</strong>
+            <span id="extrasListsSummary" class="collapse-meta">Open to view needed and swap extras.</span>
+          </span>
+          <span class="collapse-cue" aria-hidden="true"></span>
+        </summary>
+        <div class="list-columns collapse-body">
           <div class="list-block">
             <h3>Need</h3>
             <div id="extrasMissingList" class="sticker-list"></div>
@@ -1602,7 +1700,7 @@
             <div id="extrasDuplicateList" class="sticker-list"></div>
           </div>
         </div>
-      </div>
+      </details>
     </section>
 
     <section id="traderDirectory" class="panel directory-panel">
@@ -1894,6 +1992,9 @@
       searchBox: document.getElementById("searchBox"),
       overviewMatrix: document.getElementById("overviewMatrix"),
       teamGrid: document.getElementById("teamGrid"),
+      teamPagesSummary: document.getElementById("teamPagesSummary"),
+      myListsSummary: document.getElementById("myListsSummary"),
+      extrasListsSummary: document.getElementById("extrasListsSummary"),
       missingList: document.getElementById("missingList"),
       duplicateList: document.getElementById("duplicateList"),
       extrasMissingList: document.getElementById("extrasMissingList"),
@@ -2254,6 +2355,7 @@
     function renderTeams() {
       if (activeGroup === "EXT") {
         refs.teamGrid.innerHTML = renderExtraCard();
+        refs.teamPagesSummary.textContent = `Open to edit ${getExtraStickerIds().length} configurable extras.`;
         return;
       }
 
@@ -2265,6 +2367,9 @@
       refs.teamGrid.innerHTML = teams.length
         ? teams.map(renderTeamCard).join("")
         : `<div class="panel"><p class="empty-state">No stickers match the current view.</p></div>`;
+      refs.teamPagesSummary.textContent = teams.length
+        ? `Open to edit ${teams.length} visible team page${teams.length === 1 ? "" : "s"}.`
+        : "No team pages match the current filters.";
     }
 
     function renderTeamCard(team) {
@@ -2387,10 +2492,16 @@
     function renderLists() {
       const teamIds = TEAMS.flatMap(getTeamStickerIds);
       const extraIds = getExtraStickerIds();
-      renderStickerList(refs.missingList, teamIds.filter(id => getStickerValue(id) === 0), "missing", "No team stickers needed.");
-      renderStickerList(refs.duplicateList, getAvailableSwapIds(teamIds), "duplicate", "No team stickers available to swap.");
-      renderStickerList(refs.extrasMissingList, extraIds.filter(id => getStickerValue(id) === 0), "missing", "No extras needed.");
-      renderStickerList(refs.extrasDuplicateList, getAvailableSwapIds(extraIds), "duplicate", "No extras available to swap.");
+      const missingTeamIds = teamIds.filter(id => getStickerValue(id) === 0);
+      const swapTeamIds = getAvailableSwapIds(teamIds);
+      const missingExtraIds = extraIds.filter(id => getStickerValue(id) === 0);
+      const swapExtraIds = getAvailableSwapIds(extraIds);
+      refs.myListsSummary.textContent = `${missingTeamIds.length} needed | ${swapTeamIds.length} swap stickers.`;
+      refs.extrasListsSummary.textContent = `${missingExtraIds.length} needed | ${swapExtraIds.length} swap extras.`;
+      renderStickerList(refs.missingList, missingTeamIds, "missing", "No team stickers needed.");
+      renderStickerList(refs.duplicateList, swapTeamIds, "duplicate", "No team stickers available to swap.");
+      renderStickerList(refs.extrasMissingList, missingExtraIds, "missing", "No extras needed.");
+      renderStickerList(refs.extrasDuplicateList, swapExtraIds, "duplicate", "No extras available to swap.");
     }
 
     function renderStickerList(container, ids, className, emptyText) {
