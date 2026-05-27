@@ -1010,6 +1010,34 @@
       font-size: 0.96rem;
     }
 
+    .trade-paste-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .trade-paste-box {
+      display: grid;
+      gap: 6px;
+    }
+
+    .trade-paste-box label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .trade-paste-box textarea {
+      min-height: 178px;
+    }
+
+    .trade-input-meta {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
     .save-trade-form {
       display: grid;
       grid-template-columns: minmax(170px, 1fr) auto auto;
@@ -1257,6 +1285,7 @@
 
       .quick-controls,
       .manual-trade-lists,
+      .trade-paste-grid,
       .save-trade-form,
       .saved-trade-summary,
       .saved-trade-head {
@@ -1394,9 +1423,21 @@
               </div>
             </div>
           </div>
-          <textarea id="tradeInput" spellcheck="false" placeholder="Needs&#10;Argentina: 1, 4, 8&#10;BRA 2 9 17&#10;&#10;Swaps&#10;Mexico: 3, 12&#10;ENG-05"></textarea>
+          <div class="trade-paste-grid">
+            <div class="trade-paste-box">
+              <label for="tradeNeedsInput">Their needs</label>
+              <textarea id="tradeNeedsInput" spellcheck="false" placeholder="Argentina: 1, 4, 8&#10;BRA 2 9 17&#10;Extras: 2, 5"></textarea>
+              <div id="tradeNeedsMeta" class="trade-input-meta">Paste what they need.</div>
+            </div>
+            <div class="trade-paste-box">
+              <label for="tradeSwapsInput">Their swaps</label>
+              <textarea id="tradeSwapsInput" spellcheck="false" placeholder="Mexico: 3, 12&#10;ENG-05 ENG-06&#10;DR Congo: 2, 14"></textarea>
+              <div id="tradeSwapsMeta" class="trade-input-meta">Optional: paste what they can swap.</div>
+            </div>
+          </div>
           <div class="trade-actions">
             <button class="button" type="button" data-action="match">Match Trade</button>
+            <button class="button" type="button" data-action="copy-matches">Copy Matches</button>
             <button class="button" type="button" data-action="sample">Sample</button>
             <button class="button" type="button" data-action="clear-trade">Clear All</button>
           </div>
@@ -1559,7 +1600,10 @@
       duplicateList: document.getElementById("duplicateList"),
       extrasMissingList: document.getElementById("extrasMissingList"),
       extrasDuplicateList: document.getElementById("extrasDuplicateList"),
-      tradeInput: document.getElementById("tradeInput"),
+      tradeNeedsInput: document.getElementById("tradeNeedsInput"),
+      tradeSwapsInput: document.getElementById("tradeSwapsInput"),
+      tradeNeedsMeta: document.getElementById("tradeNeedsMeta"),
+      tradeSwapsMeta: document.getElementById("tradeSwapsMeta"),
       tradeNeedMode: document.getElementById("tradeNeedMode"),
       tradeSwapMode: document.getElementById("tradeSwapMode"),
       tradeTeamSelect: document.getElementById("tradeTeamSelect"),
@@ -2149,9 +2193,7 @@
 
     function renderManualTradeGroup(group, className, mode) {
       const flag = group.team ? renderFlag(group.team) : `<span class="extra-mark" aria-hidden="true">*</span>`;
-      const count = className === "duplicate"
-        ? group.ids.reduce((sum, id) => sum + getAvailableSwapCount(id), 0)
-        : group.ids.length;
+      const count = group.ids.length;
       return `
         <div class="list-group">
           <div class="list-group-header">
@@ -2473,43 +2515,53 @@
     }
 
     function renderTrade() {
-      const parsed = getTradeInput();
-      const myDuplicates = new Set(getAvailableSwapIds(getAlbumIds(), activeSavedTradeId));
-      const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
-
-      const canGive = sortIds([...parsed.needs].filter(id => myDuplicates.has(id)));
-      const canReceive = sortIds([...parsed.swaps].filter(id => myMissing.has(id)));
-      const balancedCount = Math.min(canGive.length, canReceive.length);
-      const giveNow = canGive.slice(0, balancedCount);
-      const receiveNow = canReceive.slice(0, balancedCount);
-      const giveExtra = canGive.slice(balancedCount);
-      const receiveExtra = canReceive.slice(balancedCount);
+      const matches = getTradeMatches();
+      const parsed = matches.parsed;
+      refs.tradeNeedsMeta.textContent = getTradeInputMeta(parsed.needsPastedCount, parsed.needsUnknown.length, "Paste what they need.");
+      refs.tradeSwapsMeta.textContent = getTradeInputMeta(parsed.swapsPastedCount, parsed.swapsUnknown.length, "Optional: paste what they can swap.");
 
       refs.tradeScore.innerHTML = `
-        <div class="score-box"><strong>${balancedCount}</strong><span>balanced trade</span></div>
-        <div class="score-box"><strong>${canGive.length}</strong><span>I can give</span></div>
-        <div class="score-box"><strong>${canReceive.length}</strong><span>I can receive</span></div>
+        <div class="score-box"><strong>${matches.balancedCount}</strong><span>balanced trade</span></div>
+        <div class="score-box"><strong>${matches.canGive.length}</strong><span>I can give them</span></div>
+        <div class="score-box"><strong>${matches.canReceive.length}</strong><span>They can give me</span></div>
       `;
 
       refs.tradeResults.innerHTML = `
-        ${renderTradeBlock("Give", giveNow, "trade", "No matched duplicates to give.")}
-        ${renderTradeBlock("Receive", receiveNow, "receive", "No matched missing stickers to receive.")}
-        ${renderTradeBlock("Useful extras I can give", giveExtra, "trade", "No unbalanced give-side matches.")}
-        ${renderTradeBlock("Useful extras I can receive", receiveExtra, "receive", "No unbalanced receive-side matches.")}
-        ${parsed.unknown.length ? `<p class="empty-state">Unparsed lines: ${parsed.unknown.length}</p>` : ""}
+        ${renderBalancedTrade(matches)}
+        ${renderTradeBlock("I can give them", matches.canGive, "trade", parsed.needs.size ? "None of their needs match my available swaps." : "Paste their needs to see what I can offer.")}
+        ${renderTradeBlock("They can give me", matches.canReceive, "receive", parsed.swaps.size ? "None of their swaps match my needs." : "Paste their swaps to see what helps me.")}
+        ${parsed.needsUnknown.length ? `<p class="empty-state">Unparsed needs lines: ${parsed.needsUnknown.length}</p>` : ""}
+        ${parsed.swapsUnknown.length ? `<p class="empty-state">Unparsed swaps lines: ${parsed.swapsUnknown.length}</p>` : ""}
       `;
     }
 
-    function getTradeInput() {
-      const parsed = parseTradeText(refs.tradeInput.value);
-      const needs = new Set(parsed.needs);
-      const swaps = new Set(parsed.swaps);
-      manualTrade.needs.forEach(id => needs.add(id));
-      manualTrade.swaps.forEach(id => swaps.add(id));
-      return { needs, swaps, unknown: parsed.unknown };
+    function getTradeInputMeta(count, unknownCount, emptyText) {
+      if (!count && !unknownCount) return emptyText;
+      const parsed = `${count} parsed`;
+      return unknownCount ? `${parsed}, ${unknownCount} unparsed` : parsed;
     }
 
-    function getCurrentTradeProposal() {
+    function getTradeInput() {
+      const needsParsed = parseTradeBox(refs.tradeNeedsInput.value);
+      const swapsParsed = parseTradeBox(refs.tradeSwapsInput.value);
+      const needs = new Set(needsParsed.ids);
+      const swaps = new Set(swapsParsed.ids);
+      const needsPastedCount = needs.size;
+      const swapsPastedCount = swaps.size;
+      manualTrade.needs.forEach(id => needs.add(id));
+      manualTrade.swaps.forEach(id => swaps.add(id));
+      return {
+        needs,
+        swaps,
+        needsPastedCount,
+        swapsPastedCount,
+        needsUnknown: needsParsed.unknown,
+        swapsUnknown: swapsParsed.unknown,
+        unknown: [...needsParsed.unknown, ...swapsParsed.unknown]
+      };
+    }
+
+    function getTradeMatches() {
       const parsed = getTradeInput();
       const myDuplicates = new Set(getAvailableSwapIds(getAlbumIds(), activeSavedTradeId));
       const myMissing = new Set(getAlbumIds().filter(id => getStickerValue(id) === 0));
@@ -2517,23 +2569,78 @@
       const canReceive = sortIds([...parsed.swaps].filter(id => myMissing.has(id)));
       const balancedCount = Math.min(canGive.length, canReceive.length);
       return {
-        give: canGive.slice(0, balancedCount),
-        receive: canReceive.slice(0, balancedCount),
-        extraGive: canGive.slice(balancedCount),
-        extraReceive: canReceive.slice(balancedCount),
-        unknown: parsed.unknown
+        parsed,
+        canGive,
+        canReceive,
+        balancedCount,
+        giveNow: canGive.slice(0, balancedCount),
+        receiveNow: canReceive.slice(0, balancedCount),
+        giveExtra: canGive.slice(balancedCount),
+        receiveExtra: canReceive.slice(balancedCount)
       };
+    }
+
+    function getCurrentTradeProposal() {
+      const matches = getTradeMatches();
+      return {
+        give: matches.giveNow,
+        receive: matches.receiveNow,
+        extraGive: matches.giveExtra,
+        extraReceive: matches.receiveExtra,
+        unknown: matches.parsed.unknown
+      };
+    }
+
+    function renderBalancedTrade(matches) {
+      return `
+        <div>
+          <h3>Suggested balanced trade</h3>
+          ${matches.balancedCount ? `
+            <div class="manual-trade-lists">
+              <div>${renderTradeResultList(matches.giveNow, "trade", "No stickers to give.")}</div>
+              <div>${renderTradeResultList(matches.receiveNow, "receive", "No stickers to receive.")}</div>
+            </div>
+          ` : `<p class="empty-state">Paste both their needs and swaps to build a balanced proposal.</p>`}
+        </div>
+      `;
     }
 
     function renderTradeBlock(title, ids, className, emptyText) {
       return `
         <div>
           <h3>${title}</h3>
-          <div class="sticker-list">
-            ${ids.length ? ids.map(id => renderStickerPill(id, className)).join("") : `<p class="empty-state">${emptyText}</p>`}
+          ${renderTradeResultList(ids, className, emptyText)}
+        </div>
+      `;
+    }
+
+    function renderTradeResultList(ids, className, emptyText) {
+      const sorted = sortIds(ids);
+      if (!sorted.length) return `<p class="empty-state">${emptyText}</p>`;
+      return `<div class="grouped-list">${groupStickerIds(sorted).map(group => renderTradeResultGroup(group, className)).join("")}</div>`;
+    }
+
+    function renderTradeResultGroup(group, className) {
+      const flag = group.team ? renderFlag(group.team) : `<span class="extra-mark" aria-hidden="true">*</span>`;
+      return `
+        <div class="list-group">
+          <div class="list-group-header">
+            ${flag}
+            <span class="list-group-title">${group.title}</span>
+            <span class="list-group-count">${group.ids.length}</span>
+          </div>
+          <div class="list-pills">
+            ${group.ids.map(id => renderTradeNumberPill(id, className)).join("")}
           </div>
         </div>
       `;
+    }
+
+    function renderTradeNumberPill(id, className) {
+      const meta = getStickerMeta(id);
+      const available = className === "trade" ? getAvailableSwapCount(id, activeSavedTradeId) : 0;
+      const count = available > 1 ? `<span class="mini-pill-count">x${available}</span>` : "";
+      return `<span class="mini-pill ${className}" title="${id}${available > 1 ? `, ${available} available swaps` : ""}">${meta.number}${count}</span>`;
     }
 
     function formatTradeNote(trade) {
@@ -2591,7 +2698,8 @@
       activeSavedTradeId = "";
       manualTrade.needs.clear();
       manualTrade.swaps.clear();
-      refs.tradeInput.value = "";
+      refs.tradeNeedsInput.value = "";
+      refs.tradeSwapsInput.value = "";
       refs.tradeNameInput.value = "";
       saveState();
       render();
@@ -2607,6 +2715,37 @@
         return;
       }
       copyText(formatTradeNote(trade), "Trade copied.");
+    }
+
+    function copyCurrentMatches() {
+      const matches = getTradeMatches();
+      if (!matches.canGive.length && !matches.canReceive.length) {
+        setStatus("No trade matches to copy yet.");
+        return;
+      }
+      copyText(formatMatchSummary(matches), "Matches copied.");
+    }
+
+    function formatMatchSummary(matches) {
+      const lines = [];
+      lines.push(matches.canGive.length
+        ? `I can offer: ${formatGroupedStickerInline(matches.canGive)}`
+        : "I can offer: no matches from my swaps.");
+      if (matches.canReceive.length) {
+        lines.push(`Useful for me: ${formatGroupedStickerInline(matches.canReceive)}`);
+      }
+      if (matches.balancedCount) {
+        lines.push(`Balanced trade: ${matches.balancedCount} sticker${matches.balancedCount === 1 ? "" : "s"}.`);
+      }
+      return lines.join("\n");
+    }
+
+    function formatGroupedStickerInline(ids) {
+      return groupStickerIds(sortIds(ids)).map(group => {
+        const title = group.team ? group.title : "Extras";
+        const numbers = group.ids.map(id => padNumber(getStickerMeta(id).number)).join(", ");
+        return `${title} ${numbers}`;
+      }).join("; ");
     }
 
     function renderSavedTrades() {
@@ -2697,7 +2836,8 @@
         activeSavedTradeId = "";
         manualTrade.needs.clear();
         manualTrade.swaps.clear();
-        refs.tradeInput.value = "";
+        refs.tradeNeedsInput.value = "";
+        refs.tradeSwapsInput.value = "";
         refs.tradeNameInput.value = "";
       }
 
@@ -2718,7 +2858,8 @@
       activeSavedTradeId = trade.id;
       trade.give.forEach(id => manualTrade.needs.add(id));
       trade.receive.forEach(id => manualTrade.swaps.add(id));
-      refs.tradeInput.value = "";
+      refs.tradeNeedsInput.value = "";
+      refs.tradeSwapsInput.value = "";
       refs.tradeNameInput.value = trade.name;
       renderTradeQuick();
       renderTrade();
@@ -2726,31 +2867,23 @@
       setStatus("Saved trade loaded into matcher.");
     }
 
-    function parseTradeText(text) {
+    function parseTradeBox(text) {
       const parsed = {
-        needs: new Set(),
-        swaps: new Set(),
+        ids: new Set(),
         unknown: []
       };
-      let mode = "needs";
 
       text.split(/\r?\n/).forEach(rawLine => {
         let line = rawLine.trim();
         if (!line) return;
 
         const heading = extractHeading(line);
-        if (heading.section && !heading.rest) {
-          mode = heading.section;
-          return;
-        }
-        if (heading.section) {
-          mode = heading.section;
-          line = heading.rest;
-        }
+        if (heading.section && !heading.rest) return;
+        if (heading.section) line = heading.rest;
 
-        const before = parsed[mode].size;
-        parseStickerLine(line).forEach(id => parsed[mode].add(id));
-        if (parsed[mode].size === before) {
+        const before = parsed.ids.size;
+        parseStickerLine(line).forEach(id => parsed.ids.add(id));
+        if (parsed.ids.size === before) {
           parsed.unknown.push(rawLine);
         }
       });
@@ -2919,14 +3052,13 @@
     }
 
     function loadSampleTrade() {
-      refs.tradeInput.value = [
-        "Needs",
+      refs.tradeNeedsInput.value = [
         "Argentina: 1, 4, 8",
         "Brazil: 2, 9, 17",
         "Mexico: 3, 12",
-        "Extras: 2, 5",
-        "",
-        "Swaps",
+        "Extras: 2, 5"
+      ].join("\n");
+      refs.tradeSwapsInput.value = [
         "ENG 5 6 7",
         "USA: 1, 8",
         "DR Congo: 2, 14",
@@ -2970,7 +3102,8 @@
 
     function clearTradeAll() {
       activeSavedTradeId = "";
-      refs.tradeInput.value = "";
+      refs.tradeNeedsInput.value = "";
+      refs.tradeSwapsInput.value = "";
       manualTrade.needs.clear();
       manualTrade.swaps.clear();
       renderTradeQuick();
@@ -3009,6 +3142,7 @@
       if (action === "save-swaps") saveSwapList();
       if (action === "save-trade") saveCurrentTrade();
       if (action === "copy-current-trade") copyCurrentTrade();
+      if (action === "copy-matches") copyCurrentMatches();
       if (action === "copy-saved-trade") copySavedTrade(target.dataset.id);
       if (action === "load-saved-trade") loadSavedTrade(target.dataset.id);
       if (action === "complete-saved-trade") completeSavedTrade(target.dataset.id);
@@ -3051,7 +3185,8 @@
       renderOverviewMatrix();
       renderTeams();
     });
-    refs.tradeInput.addEventListener("input", renderTrade);
+    refs.tradeNeedsInput.addEventListener("input", renderTrade);
+    refs.tradeSwapsInput.addEventListener("input", renderTrade);
     refs.tradeTeamSelect.addEventListener("change", event => {
       activeTradeCode = event.target.value;
       renderTradeQuick();

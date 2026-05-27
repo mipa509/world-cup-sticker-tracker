@@ -17,11 +17,11 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 - Use the matrix grid for a quick album overview.
 - Export the matrix as a PNG for sharing in chats or Facebook groups.
 - Export/copy your current swap list.
-- Match trades by entering another person's needs and swaps.
+- Match trades quickly by pasting another person's needs and optional swaps into separate boxes.
 - Save proposed trades so agreed swaps are reserved automatically.
 
 ## Trade workflow
-Use `They need` and `They swap` in the Trade Matcher, choose a team, and tap sticker numbers. The app shows what you can give and receive.
+Paste another collector's list into `Their needs` to instantly see which of your swaps you can offer. If they also share a swap list, paste it into `Their swaps` to see what helps your album and to build a balanced proposal. The quick team picker still works for adding individual stickers by tap.
 
 When you click `Save Trade`, the stickers you are giving are reserved. Reserved stickers no longer appear in your available swap list or future trade matches, so the next person only sees what is still available.
 
