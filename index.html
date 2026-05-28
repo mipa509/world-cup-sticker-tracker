@@ -1871,8 +1871,12 @@
           <div class="directory-form">
             <label for="authEmailInput">Email</label>
             <input id="authEmailInput" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+            <label for="authCodeInput">Email code</label>
+            <input id="authCodeInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="6-digit code">
+            <div class="directory-meta">If your email shows a code, enter it here on the same phone/browser that has your album data.</div>
             <div class="directory-actions">
-              <button class="button" type="button" data-action="sign-in-directory">Send Magic Link</button>
+              <button class="button" type="button" data-action="sign-in-directory">Send Login Email</button>
+              <button class="button" type="button" data-action="verify-directory-code">Verify Code</button>
               <button class="button" type="button" data-action="sign-out-directory">Sign Out</button>
             </div>
             <div id="authStatus" class="directory-status"></div>
@@ -2033,6 +2037,7 @@
     <footer class="site-footer">
       <p>Unofficial fan-made World Cup 2026 sticker album tracker for football sticker collectors. Track needs, swaps, duplicate stickers, saved trades and shareable matrix images for Panini-style sticker album swaps. Not affiliated with FIFA, Panini or any official tournament or sticker album brand.</p>
       <div class="footer-links">
+        <a href="faq.html">FAQ</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
       </div>
@@ -2214,6 +2219,7 @@
       traderDirectory: document.getElementById("traderDirectory"),
       accountBanner: document.getElementById("accountBanner"),
       authEmailInput: document.getElementById("authEmailInput"),
+      authCodeInput: document.getElementById("authCodeInput"),
       authStatus: document.getElementById("authStatus"),
       profileNameInput: document.getElementById("profileNameInput"),
       profileStatusInput: document.getElementById("profileStatusInput"),
@@ -3731,12 +3737,48 @@
         return;
       }
 
-      setDirectoryStatus("Sending magic link.");
+      setDirectoryStatus("Sending login email.");
       const { error } = await directoryClient.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: window.location.href.split("#")[0] }
       });
-      setDirectoryStatus(error ? error.message : "Magic link sent.");
+      setDirectoryStatus(error ? error.message : "Login email sent. Open the link, or enter the code if the email includes one.");
+    }
+
+    async function verifyDirectoryCode() {
+      if (!directoryClient) {
+        setDirectoryStatus("Supabase not configured.");
+        return;
+      }
+
+      const email = refs.authEmailInput.value.trim();
+      const token = refs.authCodeInput.value.trim().replace(/\s+/g, "");
+      if (!email) {
+        setDirectoryStatus("Enter the email address you used.");
+        return;
+      }
+      if (!token) {
+        setDirectoryStatus("Enter the email code.");
+        return;
+      }
+
+      setDirectoryStatus("Checking code.");
+      const { data, error } = await directoryClient.auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+      if (error) {
+        setDirectoryStatus(error.message);
+        return;
+      }
+
+      refs.authCodeInput.value = "";
+      directoryState.session = data.session;
+      await loadDirectoryProfile();
+      await refreshNearbyTraders(false);
+      renderDirectory();
+      setDirectoryStatus("Signed in.");
     }
 
     async function signOutDirectory() {
@@ -4536,6 +4578,7 @@
       const action = target.dataset.action;
       if (action === "scroll-traders") refs.traderDirectory.scrollIntoView({ behavior: "smooth", block: "start" });
       if (action === "sign-in-directory") await sendDirectoryMagicLink();
+      if (action === "verify-directory-code") await verifyDirectoryCode();
       if (action === "sign-out-directory") await signOutDirectory();
       if (action === "use-profile-area") await useProfileArea();
       if (action === "geocode-profile-area") await geocodeProfileArea();

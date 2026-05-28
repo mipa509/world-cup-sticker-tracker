@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FAQ | World Cup Sticker Tracker</title>
+  <meta name="robots" content="index, follow">
+  <meta name="description" content="Frequently asked questions and troubleshooting for the unofficial World Cup Sticker Tracker app.">
+  <link rel="canonical" href="https://mipa509.github.io/world-cup-sticker-tracker/faq.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --page: #f3f5ef;
+      --panel: #ffffff;
+      --ink: #101713;
+      --muted: #5a665f;
+      --line: #d8dfd8;
+      --pitch-dark: #084a36;
+    }
+
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(15, 107, 78, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(15, 107, 78, 0.06) 1px, transparent 1px),
+        var(--page);
+      background-size: 46px 46px;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(860px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      background: var(--panel);
+      box-shadow: 0 14px 36px rgba(16, 23, 19, 0.08);
+    }
+
+    h1,
+    h2 {
+      line-height: 1.12;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin: 24px 0 8px;
+      font-size: 1.2rem;
+    }
+
+    p,
+    li {
+      color: #314039;
+    }
+
+    a {
+      color: var(--pitch-dark);
+      font-weight: 800;
+    }
+
+    .meta {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <h1>FAQ</h1>
+      <p class="meta">Last updated: 28 May 2026</p>
+
+      <h2>What is the best way to start?</h2>
+      <p>Start on the phone and browser you expect to use for collecting. For most iPhone users, open the live app in Safari first, set up your album, then use Share &gt; Add to Home Screen if you want an app-like icon.</p>
+
+      <h2>Why does the app recommend starting on mobile?</h2>
+      <p>The app is designed for collecting and swapping while you are out, in shops, or meeting other collectors. Your local album data is stored in the browser on that device, so starting on your main phone avoids having different album states on different devices.</p>
+
+      <h2>My magic link opened in Safari, but I usually use the Home Screen icon. What should I do?</h2>
+      <p>On iPhone, Safari and a Home Screen web app can behave like separate app contexts. If your login email includes a 6-digit code, enter that code in the same Home Screen app or browser where your album data is stored. If you only have a link, export a JSON backup from the place with the correct album data, open/import it in the place you want to use, then sign in and publish from there. The simplest option is to use Safari consistently for login and profile publishing.</p>
+
+      <h2>Should I use the link or the email code?</h2>
+      <p>Use the code when possible, especially on iPhone. A code lets you return to the exact app/browser where your album data is stored. A magic link is convenient, but it may open a different browser context.</p>
+
+      <h2>Where is my album data stored?</h2>
+      <p>Your main album tracker data is stored locally in your browser. It is not automatically synced between Safari, Chrome, a Home Screen app, laptop, or another phone. Use Download Backup and Restore Backup to move data between browsers or devices.</p>
+
+      <h2>What gets published when I use Nearby Traders?</h2>
+      <p>Only if you choose to publish: display name, trade status, approximate area, current needs, available swaps, contact detail, and update time. Exact location is not saved. Contact details are only revealed to signed-in users when there is a sticker match.</p>
+
+      <h2>Why do I see no nearby matches?</h2>
+      <p>This is normal if no other active trader has published a matching profile near you. Matches need overlapping sticker data: either you can help their needs, they can help yours, or both.</p>
+
+      <h2>Why did a matched trader disappear?</h2>
+      <p>They may have paused or deleted their profile, changed their needs/swaps, moved outside the search radius, or you may have completed/reserved a trade so your available swaps changed.</p>
+
+      <h2>What if browser location is denied?</h2>
+      <p>Use Typed Area instead. Enter a town, postcode, city, or country. The app looks it up through OpenStreetMap and saves rounded approximate coordinates.</p>
+
+      <h2>Do I have to log in every time?</h2>
+      <p>No, the session should usually stay saved in that browser. You may need to sign in again if you clear browser data, use private browsing, switch browser/device, or the session expires.</p>
+
+      <h2>How do I remove my published trader details?</h2>
+      <p>Use Pause to hide your profile from matches, or Delete Profile to remove your published trader profile and contact details. This does not reset your local album.</p>
+
+      <h2>Is this official?</h2>
+      <p>No. This is an unofficial fan-made collector tool. It is not affiliated with FIFA, Panini, or any official tournament or sticker album brand.</p>
+
+      <p><a href="index.html">Back to app</a> | <a href="privacy.html">Privacy</a> | <a href="terms.html">Terms</a></p>
+    </article>
+  </main>
+</body>
+</html>

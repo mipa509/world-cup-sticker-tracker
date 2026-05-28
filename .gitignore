@@ -1,6 +1,7 @@
 .DS_Store
 Thumbs.db
 *.tmp
+docs/deployment.local.md
 assets/example 1.png
 assets/launch-nearby-trades-screenshot.png
 assets/sticker pack.png
