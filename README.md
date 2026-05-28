@@ -54,50 +54,7 @@ That means:
 - To back up or move phones, use `Export` to save a JSON file, then `Import` it later.
 - JSON backups include your album state and any saved trade proposals.
 
-## Use locally
-Open `index.html` in a browser, or serve the folder with any static file server.
+## Project notes
+This is a static web app. The local album tracker works from the browser, and the optional Nearby Traders directory uses a small Supabase backend for login, published profiles, and contact reveal rules.
 
-## Supabase setup
-The static app needs a Supabase project before the nearby trader directory can work.
-
-1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the Supabase SQL editor.
-3. Enable email magic-link auth in Supabase.
-4. Add your public project URL and anon key to `SUPABASE_URL` and `SUPABASE_ANON_KEY` near the top of `index.html`.
-5. Keep the service-role key out of this repository and out of the browser.
-
-Until those two public constants are set, the local album tracker still works and the directory panel shows a configuration status.
-
-Before public launch, remove any temporary test trader rows you created while trying the directory. Delete test contacts first, then test profiles, then remove the test users from Supabase Authentication if you no longer need them.
-
-## Launch checklist
-Run the latest `supabase/schema.sql` in Supabase before deploying this branch. The app expects the hardened RPC signatures and RLS policies from that file.
-
-To remove temporary test traders from Supabase SQL editor, replace the email addresses first:
-
-```sql
-with test_users as (
-  select id from auth.users
-  where email in ('test-trader-1@example.com', 'test-trader-2@example.com')
-)
-delete from public.trader_contacts
-where user_id in (select id from test_users);
-
-with test_users as (
-  select id from auth.users
-  where email in ('test-trader-1@example.com', 'test-trader-2@example.com')
-)
-delete from public.trader_profiles
-where user_id in (select id from test_users);
-```
-
-After that, remove the same test users from Supabase Authentication if they are not needed.
-
-## Publish your own copy
-You can fork this repository or copy the files into your own GitHub repository and enable GitHub Pages.
-
-1. Fork or create a new empty repository, for example `world-cup-sticker-tracker`.
-2. Push `index.html`, `README.md`, and `.gitignore`.
-3. In GitHub: Settings > Pages > Build and deployment > Deploy from a branch > `main` / root.
-
-The app stores sticker data and saved trade proposals in the browser using `localStorage`. Use Export/Import JSON to move data between devices until cloud sync is added.
+Maintainer setup and deployment notes live in [docs/deployment.md](docs/deployment.md).
