@@ -1311,6 +1311,23 @@
       font-weight: 700;
     }
 
+    .privacy-note {
+      margin: 10px 0 0;
+      border: 1px solid #cfe0d5;
+      border-radius: 8px;
+      padding: 10px;
+      color: #31453b;
+      background: #f6fbf8;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .privacy-note a,
+    .footer-links a {
+      color: var(--pitch-dark);
+      font-weight: 800;
+    }
+
     .directory-panel {
       margin-top: 14px;
     }
@@ -1590,6 +1607,13 @@
     .site-footer p {
       max-width: 980px;
       margin: 0;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .hidden {
@@ -1887,11 +1911,13 @@
             </div>
             <label for="profileContactInput">Contact detail</label>
             <input id="profileContactInput" type="text" maxlength="180" placeholder="Phone, link, email, or handle">
+            <p class="privacy-note">Publishing shares your display name, approximate area, current needs/swaps, and contact detail for matched signed-in traders. Exact location is not saved. See <a href="privacy.html">Privacy</a> and <a href="terms.html">Terms</a>.</p>
             <div class="directory-actions">
               <button class="button" type="button" data-action="use-profile-area">Use Browser Location</button>
               <button class="button" type="button" data-action="geocode-profile-area">Use Typed Area</button>
               <button class="button" type="button" data-action="publish-profile">Publish Profile</button>
               <button class="button" type="button" data-action="pause-profile">Pause</button>
+              <button class="danger-button" type="button" data-action="delete-profile">Delete Profile</button>
               <button class="button" type="button" data-action="refresh-traders">Refresh Matches</button>
             </div>
             <div id="profileSummary" class="directory-meta"></div>
@@ -2006,6 +2032,10 @@
     <p class="footer-note">Group seed checked on 21 May 2026 against current FIFA and FourFourTwo listings.</p>
     <footer class="site-footer">
       <p>Unofficial fan-made World Cup 2026 sticker album tracker for football sticker collectors. Track needs, swaps, duplicate stickers, saved trades and shareable matrix images for Panini-style sticker album swaps. Not affiliated with FIFA, Panini or any official tournament or sticker album brand.</p>
+      <div class="footer-links">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
     </footer>
   </div>
 
@@ -3850,6 +3880,49 @@
       setDirectoryStatus("Profile paused.");
     }
 
+    async function deleteTraderProfile() {
+      if (!directoryClient || !directoryState.session) {
+        setDirectoryStatus(directoryClient ? "Sign in first." : "Supabase not configured.");
+        return;
+      }
+      if (!window.confirm("Delete your published trader profile and contact details? Your local album stays on this device.")) return;
+
+      const userId = directoryState.session.user.id;
+      setDirectoryStatus("Deleting profile.");
+      const contactResult = await directoryClient
+        .from("trader_contacts")
+        .delete()
+        .eq("user_id", userId);
+      if (contactResult.error) {
+        setDirectoryStatus(contactResult.error.message);
+        return;
+      }
+
+      const profileResult = await directoryClient
+        .from("trader_profiles")
+        .delete()
+        .eq("user_id", userId);
+      if (profileResult.error) {
+        setDirectoryStatus(profileResult.error.message);
+        return;
+      }
+
+      directoryState.profile = null;
+      directoryState.contact = null;
+      directoryState.coords = null;
+      directoryState.coordsSource = "";
+      directoryState.coordsQuery = "";
+      directoryState.matches = [];
+      directoryState.selectedTraderId = "";
+      directoryState.selectedContact = null;
+      refs.profileNameInput.value = "";
+      refs.profileStatusInput.value = "open";
+      refs.profileAreaInput.value = "";
+      refs.profileContactInput.value = "";
+      renderDirectory();
+      setDirectoryStatus("Profile deleted. Your local album was not changed.");
+    }
+
     async function refreshNearbyTraders(showStatus = true) {
       if (!directoryClient || !directoryState.session) return;
 
@@ -4468,6 +4541,7 @@
       if (action === "geocode-profile-area") await geocodeProfileArea();
       if (action === "publish-profile") await publishTraderProfile();
       if (action === "pause-profile") await pauseTraderProfile();
+      if (action === "delete-profile") await deleteTraderProfile();
       if (action === "refresh-traders") await refreshNearbyTraders();
       if (action === "select-trader") {
         directoryState.selectedTraderId = target.dataset.id;

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy | World Cup Sticker Tracker</title>
+  <meta name="robots" content="index, follow">
+  <meta name="description" content="Privacy information for the unofficial World Cup Sticker Tracker app.">
+  <link rel="canonical" href="https://mipa509.github.io/world-cup-sticker-tracker/privacy.html">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --page: #f3f5ef;
+      --panel: #ffffff;
+      --ink: #101713;
+      --muted: #5a665f;
+      --line: #d8dfd8;
+      --pitch: #0f6b4e;
+      --pitch-dark: #084a36;
+    }
+
+    * {
+      box-sizing: border-box;
+      letter-spacing: 0;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(15, 107, 78, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(15, 107, 78, 0.06) 1px, transparent 1px),
+        var(--page);
+      background-size: 46px 46px;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      width: min(860px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      background: var(--panel);
+      box-shadow: 0 14px 36px rgba(16, 23, 19, 0.08);
+    }
+
+    h1,
+    h2 {
+      line-height: 1.12;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin: 24px 0 8px;
+      font-size: 1.2rem;
+    }
+
+    p,
+    li {
+      color: #314039;
+    }
+
+    a {
+      color: var(--pitch-dark);
+      font-weight: 800;
+    }
+
+    .meta {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <h1>Privacy</h1>
+      <p class="meta">Last updated: 28 May 2026</p>
+
+      <p>World Cup Sticker Tracker is an unofficial fan-made app. This page explains what data is stored when you use the local album tracker and the optional Nearby Traders directory.</p>
+
+      <h2>Local Album Data</h2>
+      <p>Your album progress, sticker counts, saved trades, and imported/exported JSON backups are stored in your browser using local storage. This local album data stays on your device unless you export it, import it elsewhere, clear browser data, or use a browser feature that syncs local data.</p>
+
+      <h2>Nearby Traders Data</h2>
+      <p>Nearby Traders is optional. If you sign in and publish a trader profile, the app stores these details in Supabase:</p>
+      <ul>
+        <li>your auth account email, handled by Supabase login</li>
+        <li>display name, trade status, and area label</li>
+        <li>rounded approximate latitude and longitude, not exact location</li>
+        <li>a snapshot of your current needs and available swaps</li>
+        <li>your contact type and contact detail</li>
+        <li>whether your profile is active or paused, plus update time</li>
+      </ul>
+
+      <h2>How Nearby Traders Uses Data</h2>
+      <p>The app uses published needs, swaps, and approximate area to rank nearby sticker matches. Contact details are stored separately from profile rows and are only revealed to signed-in users when the database finds at least one sticker match with an active published profile.</p>
+
+      <h2>Location and Maps</h2>
+      <p>Browser location is rounded before it is saved, and the database also rounds coordinates. If you type a town, postcode, city, or country, that typed area is sent to OpenStreetMap Nominatim for lookup. The map uses OpenStreetMap map tiles, so map providers may receive technical request data such as your IP address and map area.</p>
+
+      <h2>External Contact</h2>
+      <p>The app does not include in-app chat. If you open WhatsApp, Facebook, email, or another contact route, that external service handles the message under its own privacy rules.</p>
+
+      <h2>Deleting Data</h2>
+      <p>You can pause your trader profile to hide it from match search, or use Delete Profile to remove your published trader profile and contact details from Supabase. Reset Tracker only clears local album data on the current device.</p>
+
+      <h2>Service Providers</h2>
+      <p>The app may use GitHub Pages for hosting, Supabase for auth and trader directory storage, OpenStreetMap/Nominatim for typed area lookup and maps, and external contact services if you choose to contact another trader.</p>
+
+      <h2>Children</h2>
+      <p>If you are under the age required to manage your own online account or share contact details in your country, use the app with a parent or guardian. Do not publish personal contact details without permission.</p>
+
+      <h2>Contact</h2>
+      <p>For privacy questions or data removal help, open an issue on the <a href="https://github.com/mipa509/world-cup-sticker-tracker/issues">GitHub project</a>.</p>
+
+      <p><a href="index.html">Back to app</a> | <a href="terms.html">Terms</a></p>
+    </article>
+  </main>
+</body>
+</html>
