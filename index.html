@@ -2051,6 +2051,7 @@
     const MAX_STICKER_COUNT = 9;
     const DEFAULT_EXTRA_COUNT = 40;
     const DIRECTORY_SEARCH_RADIUS_KM = 100;
+    const DIRECTORY_REQUEST_TIMEOUT_MS = 15000;
     const APPROX_LOCATION_DECIMALS = 2;
     const GEOCODE_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
     const SUPABASE_URL = "https://bqcorefiziiddydxcwog.supabase.co";
@@ -3595,6 +3596,22 @@
       refs.profileStatus.textContent = message;
     }
 
+    async function withDirectoryTimeout(request, message) {
+      let timeoutId = 0;
+      const timeout = new Promise((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), DIRECTORY_REQUEST_TIMEOUT_MS);
+      });
+      try {
+        return await Promise.race([request, timeout]);
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    }
+
+    function getDirectoryErrorMessage(error, fallback = "Directory request failed.") {
+      return error && error.message ? error.message : fallback;
+    }
+
     function getRoundedCoords(position) {
       return {
         lat: Number(position.coords.latitude.toFixed(APPROX_LOCATION_DECIMALS)),
@@ -3708,8 +3725,12 @@
       directoryClient.auth.onAuthStateChange(async (_event, session) => {
         directoryState.session = session;
         directoryState.selectedContact = null;
-        await loadDirectoryProfile();
-        await refreshNearbyTraders(false);
+        try {
+          await loadDirectoryProfile();
+          await refreshNearbyTraders(false);
+        } catch (error) {
+          setDirectoryStatus(getDirectoryErrorMessage(error, "Could not load profile."));
+        }
         renderDirectory();
       });
 
@@ -3719,8 +3740,12 @@
         return;
       }
       directoryState.session = data.session;
-      await loadDirectoryProfile();
-      await refreshNearbyTraders(false);
+      try {
+        await loadDirectoryProfile();
+        await refreshNearbyTraders(false);
+      } catch (profileError) {
+        setDirectoryStatus(getDirectoryErrorMessage(profileError, "Could not load profile."));
+      }
       renderDirectory();
     }
 
@@ -3774,8 +3799,12 @@
 
       refs.authCodeInput.value = "";
       directoryState.session = data.session;
-      await loadDirectoryProfile();
-      await refreshNearbyTraders(false);
+      try {
+        await loadDirectoryProfile();
+        await refreshNearbyTraders(false);
+      } catch (profileError) {
+        setDirectoryStatus(getDirectoryErrorMessage(profileError, "Could not load profile."));
+      }
       renderDirectory();
       setDirectoryStatus("Signed in.");
     }
@@ -3801,10 +3830,10 @@
       }
 
       const userId = directoryState.session.user.id;
-      const [profileResult, contactResult] = await Promise.all([
+      const [profileResult, contactResult] = await withDirectoryTimeout(Promise.all([
         directoryClient.from("trader_profiles").select("*").eq("user_id", userId).maybeSingle(),
         directoryClient.from("trader_contacts").select("*").eq("user_id", userId).maybeSingle()
-      ]);
+      ]), "Loading profile took too long. Try again.");
 
       directoryState.profile = profileResult.error ? null : profileResult.data;
       directoryState.contact = contactResult.error ? null : contactResult.data;
@@ -3860,6 +3889,7 @@
       }
 
       const userId = directoryState.session.user.id;
+      const updatedAt = new Date().toISOString();
       setDirectoryStatus("Publishing profile.");
 
       const profilePayload = {
@@ -3872,31 +3902,55 @@
         needs: snapshot.needs,
         swaps: snapshot.swaps,
         active: true,
-        updated_at: new Date().toISOString()
+        updated_at: updatedAt
       };
       const contactPayload = {
         user_id: userId,
         contact_type: contactType,
         contact_value: contactValue.slice(0, 180),
-        updated_at: new Date().toISOString()
+        updated_at: updatedAt
       };
 
-      const profileResult = await directoryClient.from("trader_profiles").upsert(profilePayload, { onConflict: "user_id" });
-      if (profileResult.error) {
-        setDirectoryStatus(profileResult.error.message);
+      try {
+        const profileResult = await withDirectoryTimeout(
+          directoryClient.from("trader_profiles").upsert(profilePayload, { onConflict: "user_id" }),
+          "Saving profile took too long. Check your connection and try again."
+        );
+        if (profileResult.error) {
+          setDirectoryStatus(profileResult.error.message);
+          return;
+        }
+
+        const contactResult = await withDirectoryTimeout(
+          directoryClient.from("trader_contacts").upsert(contactPayload, { onConflict: "user_id" }),
+          "Saving contact detail took too long. Check your connection and try again."
+        );
+        if (contactResult.error) {
+          setDirectoryStatus(contactResult.error.message);
+          return;
+        }
+      } catch (error) {
+        setDirectoryStatus(getDirectoryErrorMessage(error, "Profile publish failed."));
         return;
       }
 
-      const contactResult = await directoryClient.from("trader_contacts").upsert(contactPayload, { onConflict: "user_id" });
-      if (contactResult.error) {
-        setDirectoryStatus(contactResult.error.message);
-        return;
-      }
-
-      await loadDirectoryProfile();
-      await refreshNearbyTraders(false);
+      directoryState.profile = profilePayload;
+      directoryState.contact = contactPayload;
+      directoryState.selectedContact = null;
       renderDirectory();
-      setDirectoryStatus(directoryState.profile?.active ? "Profile published." : "Profile saved, but it is still paused.");
+      setDirectoryStatus("Profile published.");
+      void syncDirectoryAfterProfileSave();
+    }
+
+    async function syncDirectoryAfterProfileSave() {
+      try {
+        await loadDirectoryProfile();
+        await refreshNearbyTraders(false);
+        renderDirectory();
+      } catch (_error) {
+        directoryState.loading = false;
+        renderDirectory();
+      }
     }
 
     async function pauseTraderProfile() {
@@ -3906,26 +3960,45 @@
       }
 
       if (!directoryState.profile) {
-        await loadDirectoryProfile();
+        try {
+          await loadDirectoryProfile();
+        } catch (error) {
+          setDirectoryStatus(getDirectoryErrorMessage(error, "Could not check profile."));
+          return;
+        }
       }
       if (!directoryState.profile) {
         setDirectoryStatus("Publish profile before pausing.");
         return;
       }
 
-      const { error } = await directoryClient
-        .from("trader_profiles")
-        .update({ active: false, status: "paused", updated_at: new Date().toISOString() })
-        .eq("user_id", directoryState.session.user.id);
-      if (error) {
-        setDirectoryStatus(error.message);
+      const updatedAt = new Date().toISOString();
+      let result;
+      try {
+        result = await withDirectoryTimeout(
+          directoryClient
+            .from("trader_profiles")
+            .update({ active: false, status: "paused", updated_at: updatedAt })
+            .eq("user_id", directoryState.session.user.id),
+          "Pausing profile took too long. Check your connection and try again."
+        );
+      } catch (error) {
+        setDirectoryStatus(getDirectoryErrorMessage(error, "Could not pause profile."));
         return;
       }
-      refs.profileStatusInput.value = "paused";
-      await loadDirectoryProfile();
-      await refreshNearbyTraders(false);
+      if (result.error) {
+        setDirectoryStatus(result.error.message);
+        return;
+      }
+
+      directoryState.profile = { ...directoryState.profile, active: false, status: "paused", updated_at: updatedAt };
+      directoryState.matches = [];
+      directoryState.selectedTraderId = "";
+      directoryState.selectedContact = null;
+      refs.profileStatusInput.value = "open";
       renderDirectory();
       setDirectoryStatus("Profile paused.");
+      void syncDirectoryAfterProfileSave();
     }
 
     async function deleteTraderProfile() {
@@ -3995,14 +4068,27 @@
       if (showStatus) setDirectoryStatus("Refreshing matches.");
       renderDirectory();
 
-      const { data, error } = await directoryClient.rpc("match_nearby_traders", {
-        max_distance_km: DIRECTORY_SEARCH_RADIUS_KM
-      });
+      let result;
+      try {
+        result = await withDirectoryTimeout(
+          directoryClient.rpc("match_nearby_traders", {
+            max_distance_km: DIRECTORY_SEARCH_RADIUS_KM
+          }),
+          "Refreshing matches took too long. Tap Refresh Matches to try again."
+        );
+      } catch (error) {
+        directoryState.loading = false;
+        directoryState.matches = [];
+        if (showStatus) setDirectoryStatus(getDirectoryErrorMessage(error, "Match refresh failed."));
+        renderDirectory();
+        return;
+      }
 
       directoryState.loading = false;
+      const { data, error } = result;
       if (error) {
         directoryState.matches = [];
-        setDirectoryStatus(error.message);
+        if (showStatus) setDirectoryStatus(error.message);
         renderDirectory();
         return;
       }
@@ -4282,7 +4368,7 @@
         if (getStickerValue(id) >= 2) setStickerValue(id, getStickerValue(id) - 1);
       });
       trade.receive.forEach(id => {
-        if (getStickerValue(id) < 1) setStickerValue(id, 1);
+        setStickerValue(id, getStickerValue(id) + 1);
       });
       trade.status = "completed";
       trade.completedAt = new Date().toISOString();
@@ -4298,7 +4384,7 @@
 
       saveState();
       render();
-      setStatus("Trade completed and album updated.");
+      setStatus("Trade completed. Received stickers added; publish profile to update Nearby Traders.");
     }
 
     function loadSavedTrade(id) {
