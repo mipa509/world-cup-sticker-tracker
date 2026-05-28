@@ -16,6 +16,24 @@ The static app needs a Supabase project before the nearby trader directory can w
 
 Until those two public constants are set, the local album tracker still works and the directory panel shows a configuration status.
 
+## Login Email Template
+The app supports both magic links and email codes. The email code is useful on iPhone because users can enter it in the same Safari/Home Screen context where their album data is stored.
+
+In Supabase, go to Authentication > Emails > Magic Link and include the token in the email template. Supabase sends an OTP when the `{{ .Token }}` variable is used in the template.
+
+Example content:
+
+```html
+<h2>World Cup Sticker Tracker login</h2>
+<p>Your login code is:</p>
+<p style="font-size: 28px; font-weight: 700;">{{ .Token }}</p>
+<p>Enter this code in the app on the same phone or browser where your album is saved.</p>
+<p>You can also open this link:</p>
+<p><a href="{{ .ConfirmationURL }}">Sign in</a></p>
+```
+
+If users report that the link opens in the wrong place on iPhone, tell them to use the code field instead.
+
 ## Launch Checklist
 Run the latest `supabase/schema.sql` in Supabase before deploying this branch. The app expects the hardened RPC signatures and RLS policies from that file.
 
