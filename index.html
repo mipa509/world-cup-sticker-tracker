@@ -4368,7 +4368,7 @@
         if (getStickerValue(id) >= 2) setStickerValue(id, getStickerValue(id) - 1);
       });
       trade.receive.forEach(id => {
-        if (getStickerValue(id) < 1) setStickerValue(id, 1);
+        setStickerValue(id, getStickerValue(id) + 1);
       });
       trade.status = "completed";
       trade.completedAt = new Date().toISOString();
@@ -4384,7 +4384,7 @@
 
       saveState();
       render();
-      setStatus("Trade completed and album updated.");
+      setStatus("Trade completed. Received stickers added; publish profile to update Nearby Traders.");
     }
 
     function loadSavedTrade(id) {
