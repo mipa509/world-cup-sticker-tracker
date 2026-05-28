@@ -1,5 +1,7 @@
 # World Cup Sticker Tracker
 
+![World Cup Sticker Tracker app banner](assets/github-banner.png)
+
 Free unofficial mobile-first sticker tracker app for the 2026 World Cup album. It helps football sticker collectors track needs, swaps, duplicate stickers, saved trades, JSON backups, and shareable matrix images for Panini-style sticker album swaps.
 
 This is an unofficial fan-made collector tool and is not affiliated with FIFA, Panini, or any official tournament or sticker album brand.
@@ -19,6 +21,7 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 - Export/copy your current swap list.
 - Match trades quickly by pasting another person's needs and optional swaps into separate boxes.
 - Save proposed trades so agreed swaps are reserved automatically.
+- Optionally publish a trader profile to find nearby sticker matches through Supabase.
 
 ## Trade workflow
 Paste another collector's list into `Their needs` to instantly see which of your swaps you can offer. If they also share a swap list, paste it into `Their swaps` to see what helps your album and to build a balanced proposal. The quick team picker still works for adding individual stickers by tap.
@@ -29,10 +32,19 @@ If the trade is accepted, click `Complete` on the saved trade. The app removes t
 
 Saved trades can be copied, loaded back into the matcher while reserved, completed, deleted, and included in JSON backups.
 
+## Trader directory
+The nearby trader directory is opt-in. Your browser album remains the source of truth; clicking `Publish Profile` sends a snapshot of your current needs and available swaps to Supabase. Reserved swaps are excluded from the published snapshot.
+
+Location is rounded in the browser before it is saved. You can use browser location or type a town, postcode, city, or country; typed areas are looked up through OpenStreetMap Nominatim and then stored as approximate latitude/longitude plus your area label. Contact details are stored separately and are revealed only when another signed-in user has at least one sticker match with your profile.
+
+The directory does not include in-app chat. `Offer Trade` saves a balanced trade locally, copies a message, and opens the external contact channel when possible.
+
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
 
-Each person's sticker data stays in their own browser using `localStorage`. The app does not upload collections to GitHub, does not share your data with me, and does not use a shared database.
+Each person's main album data stays in their own browser using `localStorage`. The app does not upload full collections to GitHub. If someone opts into Nearby Traders, the app publishes only their display name, status, approximate area, current needs, available swaps, and contact detail to Supabase.
+
+Nearby Traders protects contact details separately from public profile rows. Other signed-in users can see a matched profile through the directory, but the database only reveals contact details when both users have active published profiles with at least one sticker match.
 
 That means:
 
@@ -42,14 +54,7 @@ That means:
 - To back up or move phones, use `Export` to save a JSON file, then `Import` it later.
 - JSON backups include your album state and any saved trade proposals.
 
-## Use locally
-Open `index.html` in a browser, or serve the folder with any static file server.
+## Project notes
+This is a static web app. The local album tracker works from the browser, and the optional Nearby Traders directory uses a small Supabase backend for login, published profiles, and contact reveal rules.
 
-## Publish your own copy
-You can fork this repository or copy the files into your own GitHub repository and enable GitHub Pages.
-
-1. Fork or create a new empty repository, for example `world-cup-sticker-tracker`.
-2. Push `index.html`, `README.md`, and `.gitignore`.
-3. In GitHub: Settings > Pages > Build and deployment > Deploy from a branch > `main` / root.
-
-The app stores sticker data and saved trade proposals in the browser using `localStorage`. Use Export/Import JSON to move data between devices until cloud sync is added.
+Maintainer setup and deployment notes live in [docs/deployment.md](docs/deployment.md).
