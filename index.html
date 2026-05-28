@@ -1893,7 +1893,6 @@
                 <select id="profileStatusInput">
                   <option value="open">Open to trade</option>
                   <option value="busy">Busy</option>
-                  <option value="paused">Paused</option>
                 </select>
               </div>
             </div>
@@ -1919,7 +1918,7 @@
             <div class="directory-actions">
               <button class="button" type="button" data-action="use-profile-area">Use Browser Location</button>
               <button class="button" type="button" data-action="geocode-profile-area">Use Typed Area</button>
-              <button class="button" type="button" data-action="publish-profile">Publish Profile</button>
+              <button class="button" type="button" data-action="publish-profile">Publish / Resume</button>
               <button class="button" type="button" data-action="pause-profile">Pause</button>
               <button class="danger-button" type="button" data-action="delete-profile">Delete Profile</button>
               <button class="button" type="button" data-action="refresh-traders">Refresh Matches</button>
@@ -3406,7 +3405,7 @@
       refs.authStatus.textContent = email ? `Signed in as ${email}` : "Signed out.";
       if (!refs.profileStatus.textContent) {
         refs.profileStatus.textContent = directoryState.profile
-          ? `Published ${formatShortDate(directoryState.profile.updated_at)}.`
+          ? `${directoryState.profile.active ? "Published" : "Paused"} ${formatShortDate(directoryState.profile.updated_at)}.`
           : "Profile not published.";
       }
     }
@@ -3817,7 +3816,7 @@
       const contact = directoryState.contact;
       if (profile) {
         refs.profileNameInput.value = profile.display_name || "";
-        refs.profileStatusInput.value = profile.status || "open";
+        refs.profileStatusInput.value = profile.status === "paused" ? "open" : profile.status || "open";
         refs.profileAreaInput.value = profile.area_label || "";
         setProfileCoords({
           lat: Number(profile.approx_lat),
@@ -3837,7 +3836,7 @@
       }
 
       const displayName = refs.profileNameInput.value.trim() || directoryState.session.user.email?.split("@")[0] || "Trader";
-      const status = refs.profileStatusInput.value || "open";
+      const status = refs.profileStatusInput.value === "busy" ? "busy" : "open";
       const areaLabel = refs.profileAreaInput.value.trim();
       const contactType = refs.profileContactType.value || "other";
       const contactValue = refs.profileContactInput.value.trim();
@@ -3861,7 +3860,6 @@
       }
 
       const userId = directoryState.session.user.id;
-      const active = status !== "paused";
       setDirectoryStatus("Publishing profile.");
 
       const profilePayload = {
@@ -3873,7 +3871,7 @@
         approx_lng: coords.lng,
         needs: snapshot.needs,
         swaps: snapshot.swaps,
-        active,
+        active: true,
         updated_at: new Date().toISOString()
       };
       const contactPayload = {
@@ -3898,12 +3896,20 @@
       await loadDirectoryProfile();
       await refreshNearbyTraders(false);
       renderDirectory();
-      setDirectoryStatus(active ? "Profile published." : "Profile saved as paused.");
+      setDirectoryStatus(directoryState.profile?.active ? "Profile published." : "Profile saved, but it is still paused.");
     }
 
     async function pauseTraderProfile() {
       if (!directoryClient || !directoryState.session) {
         setDirectoryStatus(directoryClient ? "Sign in first." : "Supabase not configured.");
+        return;
+      }
+
+      if (!directoryState.profile) {
+        await loadDirectoryProfile();
+      }
+      if (!directoryState.profile) {
+        setDirectoryStatus("Publish profile before pausing.");
         return;
       }
 
