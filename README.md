@@ -57,6 +57,6 @@ That means:
 ## Project notes
 This is a static web app. The local album tracker works from the browser, and the optional Nearby Traders directory uses a small Supabase backend for login, published profiles, and contact reveal rules.
 
-Privacy and terms pages are available at [privacy.html](privacy.html) and [terms.html](terms.html).
+FAQ, privacy, and terms pages are available at [faq.html](faq.html), [privacy.html](privacy.html), and [terms.html](terms.html).
 
 Maintainer setup and deployment notes live in [docs/deployment.md](docs/deployment.md).
