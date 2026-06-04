@@ -24,7 +24,7 @@ On iPhone, open the link in Safari and use Share > Add to Home Screen for the be
 - Optionally publish a trader profile to find nearby sticker matches through Supabase.
 
 ## Trade workflow
-Paste another collector's list into `Their needs` to instantly see which of your swaps you can offer. If they also share a swap list, paste it into `Their swaps` to see what helps your album and to build a balanced proposal. The quick team picker still works for adding individual stickers by tap.
+Paste another collector's list into `Their needs` to instantly see which of your swaps you can offer. If they also share a swap list, paste it into `Their swaps` to see what helps your album and to build a proposal using every matching sticker on both sides. Unequal trades such as one sticker for two are supported. The quick team picker still works for adding individual stickers by tap.
 
 When you click `Save Trade`, the stickers you are giving are reserved. Reserved stickers no longer appear in your available swap list or future trade matches, so the next person only sees what is still available.
 
@@ -37,7 +37,7 @@ The nearby trader directory is opt-in. Your browser album remains the source of 
 
 Location is rounded in the browser before it is saved. You can use browser location or type a town, postcode, city, or country; typed areas are looked up through OpenStreetMap Nominatim and then stored as approximate latitude/longitude plus your area label. Contact details are stored separately and are revealed only when another signed-in user has at least one sticker match with your profile.
 
-The directory does not include in-app chat. `Offer Trade` saves a balanced trade locally, copies a message, and opens the external contact channel when possible.
+The directory does not include in-app chat. `Offer Trade` saves all matching stickers on both sides as a proposed trade, copies a message, and opens the external contact channel when possible.
 
 ## Can other people use it?
 Yes. Anyone can open the public app link and track their own album.
