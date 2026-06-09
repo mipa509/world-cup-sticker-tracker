@@ -45,7 +45,7 @@
       "Track 48 World Cup 2026 teams",
       "Mark stickers as needed, owned or available for swap",
       "Export a shareable album matrix PNG",
-      "Copy swap lists",
+      "Copy needs and swap lists",
       "Match, reserve and complete sticker trades",
       "Export and import JSON backups"
     ]
@@ -1806,6 +1806,7 @@
       <div class="matrix-tools">
         <button class="button" type="button" data-action="save-matrix">Save Matrix PNG</button>
         <button class="button" type="button" data-action="save-swaps">Save Swap List</button>
+        <button class="button" type="button" data-action="save-needs">Save Needs List</button>
       </div>
       <div id="overviewMatrix" class="matrix-wrap" aria-label="Album grid overview"></div>
     </section>
@@ -2257,6 +2258,10 @@
       return Array.from({ length: TEAM_STICKER_COUNT }, (_, index) => stickerId(team.code, index + 1));
     }
 
+    function getTeamAlbumIds() {
+      return TEAMS.flatMap(getTeamStickerIds);
+    }
+
     function flagUrl(team) {
       if (!team || !team.flagCode) return "";
       if (SPECIAL_FLAG_SVGS[team.flagCode]) return svgDataUrl(SPECIAL_FLAG_SVGS[team.flagCode]);
@@ -2288,7 +2293,7 @@
     }
 
     function getAlbumIds() {
-      return [...TEAMS.flatMap(getTeamStickerIds), ...getExtraStickerIds()];
+      return [...getTeamAlbumIds(), ...getExtraStickerIds()];
     }
 
     function getVisibleIds() {
@@ -2343,7 +2348,7 @@
     }
 
     function getAlbumIdsForExtras(extrasCount) {
-      const teamIds = TEAMS.flatMap(team => Array.from({ length: TEAM_STICKER_COUNT }, (_, index) => stickerId(team.code, index + 1)));
+      const teamIds = getTeamAlbumIds();
       const extraIds = Array.from({ length: extrasCount }, (_, index) => stickerId("EXT", index + 1));
       return [...teamIds, ...extraIds];
     }
@@ -2465,7 +2470,7 @@
       return sortIds(ids.filter(id => isSwapAvailable(id, exceptTradeId)));
     }
 
-    function getStats(ids = getAlbumIds(), exceptTradeId = "") {
+    function getStats(ids = getTeamAlbumIds(), exceptTradeId = "") {
       const total = ids.length;
       const owned = ids.filter(id => getStickerValue(id) >= 1).length;
       const duplicates = ids.reduce((sum, id) => sum + getAvailableSwapCount(id, exceptTradeId), 0);
@@ -2862,13 +2867,17 @@
       window.setTimeout(() => URL.revokeObjectURL(url), 800);
     }
 
+    function getNeedIds() {
+      return sortIds(getTeamAlbumIds().filter(id => getStickerValue(id) === 0));
+    }
+
     function getSwapIds() {
-      return getAvailableSwapIds();
+      return getAvailableSwapIds(getTeamAlbumIds());
     }
 
     function formatGroupedStickerText(ids, options = {}) {
       const groups = groupStickerIds(sortIds(ids));
-      if (!groups.length) return "No swaps available.";
+      if (!groups.length) return options.emptyText || "No stickers listed.";
       return groups.map(group => {
         const title = group.team ? `${group.title} (${group.key})` : "Extras (EXT)";
         const numbers = group.ids.map(id => {
@@ -2890,7 +2899,20 @@
         "",
         `Available swaps: ${stats.duplicates}`,
         "",
-        formatGroupedStickerText(getSwapIds(), { includeCounts: true })
+        formatGroupedStickerText(getSwapIds(), { includeCounts: true, emptyText: "No team stickers available to swap." })
+      ].join("\n");
+    }
+
+    function buildNeedListText() {
+      const stats = getStats();
+      return [
+        "World Cup 2026 stickers needed",
+        `Updated: ${new Date().toLocaleString()}`,
+        `Complete: ${stats.owned}/${stats.total} (${stats.percent}%)`,
+        "",
+        `Needed team stickers: ${stats.missing}`,
+        "",
+        formatGroupedStickerText(getNeedIds(), { emptyText: "No team stickers needed." })
       ].join("\n");
     }
 
@@ -2905,6 +2927,20 @@
         );
       } else {
         setStatus("Swap list saved.");
+      }
+    }
+
+    function saveNeedList() {
+      const text = buildNeedListText();
+      const filename = `world-cup-needs-${getDateStamp()}.txt`;
+      downloadBlob(new Blob([text], { type: "text/plain;charset=utf-8" }), filename);
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(
+          () => setStatus("Needs list saved and copied."),
+          () => setStatus("Needs list saved.")
+        );
+      } else {
+        setStatus("Needs list saved.");
       }
     }
 
@@ -3350,7 +3386,7 @@
     }
 
     function getDirectorySnapshot() {
-      const ids = getAlbumIds();
+      const ids = getTeamAlbumIds();
       return {
         needs: sortIds(ids.filter(id => getStickerValue(id) === 0)),
         swaps: getAvailableSwapIds(ids)
@@ -4696,6 +4732,7 @@
       if (action === "reset") resetData();
       if (action === "save-matrix") saveMatrixPng();
       if (action === "save-swaps") saveSwapList();
+      if (action === "save-needs") saveNeedList();
       if (action === "save-trade") saveCurrentTrade();
       if (action === "copy-current-trade") copyCurrentTrade();
       if (action === "copy-matches") copyCurrentMatches();
